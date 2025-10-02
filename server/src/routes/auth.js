@@ -2,8 +2,11 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
-
+import dotenv from "dotenv";
+import startNotificationScheduler from "../api/notificationController.js";
+dotenv.config({path: '../.env'});
 const router = express.Router();
+
 
 // Signup
 router.post("/signup", async (req, res) => {
@@ -18,6 +21,7 @@ router.post("/signup", async (req, res) => {
 
     user = new User({ name, email, password: hashedPassword });
     await user.save();
+    startNotificationScheduler(user); // Start scheduler for the new user
 
     res.status(201).json({ message: "User registered successfully" });
   } catch (err) {
@@ -28,6 +32,7 @@ router.post("/signup", async (req, res) => {
 // Login
 router.post("/login", async (req, res) => {
   try {
+   
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
@@ -41,7 +46,7 @@ router.post("/login", async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
-
+    startNotificationScheduler({ user: { id: user._id, name: user.name, email: user.email } }); // Start scheduler for the new user
     res.json({ token, user: { id: user._id, name: user.name, email: user.email } });
   } catch (err) {
     res.status(500).json({ message: err.message });

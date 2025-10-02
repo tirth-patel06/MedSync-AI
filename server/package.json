@@ -2,7 +2,9 @@
   "name": "backend",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
     "dev": "nodemon index.js"
   },
@@ -23,6 +25,7 @@
     "express-validator": "^7.2.1",
     "jsonwebtoken": "^9.0.2",
     "langchain": "^0.3.35",
-    "mongoose": "^8.18.3"
+    "mongoose": "^8.18.3",
+    "node-notifier": "^10.0.1"
   }
 }

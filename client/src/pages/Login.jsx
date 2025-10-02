@@ -9,6 +9,9 @@ export default function Login() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+
+
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     const res = await fetch("http://localhost:8080/api/auth/login", {
@@ -16,6 +19,10 @@ export default function Login() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form)
     });
+    if(res.error){
+      alert("Login failed", res.error);
+      return;
+    }
     const data = await res.json();
     console.log(data);
     if (data.token) {
@@ -25,6 +32,8 @@ export default function Login() {
     }
   };
 
+
+  
   return (
     <div className="flex items-center justify-center h-screen bg-gray-900 text-white">
       <form onSubmit={handleSubmit} className="bg-gray-800 p-6 rounded-xl w-96">

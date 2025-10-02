@@ -4,18 +4,25 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "party": "echo Party time! && start https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "motivate": "echo You can do it team INSIGHT-X! Keep pushing forward! && start https://www.youtube.com/watch?v=ZXsQAXx_ao0",
+    "rageQuit": "echo Rage quitting in 5...4...3...2...1... && rm -rf node_modules  && echo Just kidding, don't do that! && start https://www.youtube.com/watch?v=QH2-TGUlwu4",
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tailwindcss/vite": "^4.1.14",
+    "axios": "^1.12.2",
+    "lucide-react": "^0.544.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.9.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
+    "@tailwindcss/postcss": "^4.1.13",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.3",
@@ -25,7 +32,7 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.4.0",
     "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.17",
+    "tailwindcss": "^4.1.14",
     "vite": "^7.1.7"
   }
 }

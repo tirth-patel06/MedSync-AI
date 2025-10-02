@@ -1,5 +1,5 @@
 import { useState } from "react";
-
+import { useNavigate } from "react-router-dom";
 export default function Signup() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
 
@@ -8,6 +8,7 @@ export default function Signup() {
   };
 
   const handleSubmit = async (e) => {
+    const navigate = useNavigate();
     e.preventDefault();
     const res = await fetch("http://localhost:8080/api/auth/signup", {
       method: "POST",
@@ -16,6 +17,7 @@ export default function Signup() {
     });
     const data = await res.json();
     console.log(data);
+    navigate("/login");
   };
 
   return (

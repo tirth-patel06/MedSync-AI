@@ -2,6 +2,14 @@ import React from "react";
 
 export default function Dashboard() {
   const user = JSON.parse(localStorage.getItem("user"));
+  if ("Notification" in window) {
+  Notification.requestPermission().then((perm) => {
+    if (perm === "granted") {
+      console.log("✅ Notifications enabled");
+    }
+  });
+}
+
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
