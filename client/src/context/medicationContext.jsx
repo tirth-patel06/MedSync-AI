@@ -6,9 +6,8 @@ const MedicineContext = createContext();
 export const useMedicine = () => useContext(MedicineContext);
 
 export const MedicineProvider = ({ children }) => {
- 
-
-
+    const[localuser,setLocaluser]=useState(JSON.parse(localStorage.getItem("user")));
+    
    const [medication, setMedication] = useState({
      pillName: "",
      pillDescription: "",
@@ -19,13 +18,14 @@ export const MedicineProvider = ({ children }) => {
      startDate: new Date().toISOString().split('T')[0],
      endDate: ""
    });
-   
-   
-   
+
+
+
    const addMedication=useCallback(async()=>{
      try {
-       console.log("medication",medication)
-       const response = await axios.post('http://localhost:5000/api/medicine/add', medication);  
+       console.log("medication",medication);
+       console.log("localuser",localuser);
+       const response = await axios.post('http://localhost:8080/api/medicine/add', {medication,localuser});  
        console.log('Medication added successfully:', response.data);
      }
      catch (error) {
