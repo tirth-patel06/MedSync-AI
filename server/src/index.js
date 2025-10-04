@@ -8,9 +8,11 @@ import authRoutes from "../src/routes/auth.js";
 import startNotificationScheduler from "./api/notificationController.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import healthRoutes from "./routes/health.js"
+import agentsRoutes from "./routes/agentsRoutes.js";
 
 
 dotenv.config();
+
 
 const app = express();
 
@@ -25,6 +27,8 @@ app.use(cors({
 }));
 app.use(express.json());
 
+
+app.use("/api/agents",agentsRoutes)
 app.use("/api/auth", authRoutes);
 app.use("/api/notification",notificationRoutes );
 app.use("/api/medicine",MedicineRoutes );
