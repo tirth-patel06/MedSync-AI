@@ -23,6 +23,20 @@ const memory = new ConversationSummaryMemory({
   llm: chatModel,
 });
 
+//call the past memory
+let pastData
+try{
+  pastData = await Conversation.find().limit(2);
+  console.log("Past Data loaded...");
+}catch(err){
+  console.log("Error in featching the data...");
+}
+
+//add memory in the memory veriable
+await memory.saveContext(
+  { input: "What is the past chat?" },
+  { output: `Past Chat:\n${JSON.stringify(pastData, null, 2)}` }
+);
 
 async function modelCall(input) {
 
@@ -53,7 +67,7 @@ async function modelCall(input) {
     await Conversation.create({
       summary,
       input,
-      output,
+      output: res1.text,
       model: "medicine_model",
     });
     console.log("Conversation saved successfully!");
