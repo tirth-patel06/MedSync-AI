@@ -143,7 +143,7 @@ export default function Dashboard() {
               <TrendingUp className="w-5 h-5" />
               <span>Analytics</span>
             </button>
-            <button onClick={() => window.location.href = '/chat'} className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-slate-800/50 text-slate-400 hover:text-white transition-all">
+            <button onClick={() => window.location.href = '/agents'} className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-slate-800/50 text-slate-400 hover:text-white transition-all">
               <MessageSquare className="w-5 h-5" />
               <span>AI Assistant</span>
             </button>
@@ -345,7 +345,7 @@ export default function Dashboard() {
                 {aiAgents.map((agent, idx) => (
                   <button 
                     key={idx}
-                    onClick={() => window.location.href = '/chat'}
+                    onClick={() => window.location.href = '/agents'}
                     className="bg-slate-800/50 hover:bg-slate-800 rounded-xl p-4 border border-slate-700 hover:border-orange-500/50 transition-all group text-left"
                   >
                     <div className={`w-10 h-10 bg-gradient-to-br ${agent.color}/20 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
@@ -357,7 +357,7 @@ export default function Dashboard() {
                 ))}
               </div>
 
-              <button onClick={() => window.location.href = '/chat'} className="w-full mt-4 bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white font-medium py-3 rounded-xl transition-all shadow-lg flex items-center justify-center space-x-2 group">
+              <button onClick={() => window.location.href = '/agents'} className="w-full mt-4 bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white font-medium py-3 rounded-xl transition-all shadow-lg flex items-center justify-center space-x-2 group">
                 <span>Start Conversation</span>
                 <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
