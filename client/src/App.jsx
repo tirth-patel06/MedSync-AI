@@ -6,14 +6,18 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
+import LandingPage from "./pages/landingPage.jsx";
+import NotificationsPage from "./pages/notifications.jsx"
 
 function App() {
   return (
     
     <Routes>
-      <Route path="/" element={<Navigate to="/login" />} />
+      <Route path="/" element={<Navigate to="/landing" />} />
+      <Route path="/landing" element={<LandingPage />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
+         <Route path="/notifications" element={<NotificationsPage />} />
         <Route 
           path="/dashboard" 
           element={
