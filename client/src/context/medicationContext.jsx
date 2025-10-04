@@ -23,7 +23,7 @@ export const MedicineProvider = ({ children }) => {
 
    const addMedication=useCallback(async()=>{
      try {
-       console.log("medication",medication);
+       
        console.log("localuser",localuser);
        const response = await axios.post('http://localhost:8080/api/medicine/add', {medication,localuser});  
        console.log('Medication added successfully:', response.data);
@@ -34,8 +34,40 @@ export const MedicineProvider = ({ children }) => {
     }
     ,[medication]);
 
+
+    const todayMedication=useCallback(async()=>{
+     try {       
+       const response = await axios.post('http://localhost:8080/api/medicine/today', {localuser});  
+       console.log('todays medicine fetched succesfully', response.data);
+       return response.data;
+     }
+     catch (error) {
+       console.error('Error adding medication:', error);
+     }
+    }
+    ,[localuser]);
+ 
+
+
+    const medicineStatus =useCallback(async(medId)=>{
+      try{
+        const response = await axios.post('http://localhost:8080/api/medicine/status', {localuser,medId});  
+       console.log('status changed sucessfully', response.data);
+       return response.data;
+      }
+      catch(error){
+        console.error('Error updating status:', error);
+      }
+
+    },[localuser])
+  
+
+
+    
+
+
   return (
-    <MedicineContext.Provider value={{medication, setMedication,addMedication}}>
+    <MedicineContext.Provider value={{medication, setMedication,addMedication,todayMedication,medicineStatus}}>
       {children}
     </MedicineContext.Provider>
   );
