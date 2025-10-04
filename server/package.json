@@ -25,7 +25,7 @@
     "express-validator": "^7.2.1",
     "jsonwebtoken": "^9.0.2",
     "langchain": "^0.3.35",
-    "mongoose": "^8.18.3",
+    "mongoose": "^8.19.0",
     "node-notifier": "^10.0.1"
   }
 }
