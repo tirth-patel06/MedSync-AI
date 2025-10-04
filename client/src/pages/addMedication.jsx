@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { Plus, Trash2, Clock, Pill, Calendar, Check } from 'lucide-react';
 import { useMedicine } from '../context/medicationContext';
+import {useNotification} from '../context/notificationContext'
+
 
 
 export default function MedicationEntryForm() {
+  const{sendNotification} = useNotification();
   const { medication, setMedication, addMedication } = useMedicine();  
   const [currentTime, setCurrentTime] = useState({
     time: "",
@@ -55,12 +58,13 @@ export default function MedicationEntryForm() {
     adherenceHistory: []
   });
 
-  const handleSubmit = () => {
+  const handleSubmit = async() => {
     if (!medication.pillName) { alert("Please enter pill name"); return; }
     if (medication.dosageDays.length === 0) { alert("Please select at least one day"); return; }
     if (medication.dosageTimes.length === 0) { alert("Please add at least one dosage time"); return; }
     setShowJson(true);
     addMedication(); 
+
   };
 
   const resetForm = () => {

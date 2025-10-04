@@ -1,6 +1,4 @@
 import Medication from "../models/medicineModel.js";
-
-
 export const addMedication = async (req, res) => {
   try {
     console.log("Request body:", req.body);
@@ -20,6 +18,7 @@ export const addMedication = async (req, res) => {
       adherenceHistory,
       notes
     } = medication;
+
     const sampleMedicine = new Medication({
       userId:localuser.id,
       pillName,
@@ -35,8 +34,6 @@ export const addMedication = async (req, res) => {
       adherenceHistory,
       notes
     });
-
-    
     await sampleMedicine.save();
     return res.status(201).json({
       success: true,

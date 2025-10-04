@@ -9,7 +9,8 @@ import startNotificationScheduler from "./api/notificationController.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import healthRoutes from "./routes/health.js"
 
-dotenv.config({ path: path.resolve('./.env') });
+
+dotenv.config();
 
 const app = express();
 
