@@ -105,9 +105,32 @@ export default generateReport = async (req, res) => {
             adherenceHistory,
         };
 
-        
+        //do the api request to generate the pdf from the generated data
+        const response = await axios.post(apiUrl, JsonPayload, {
+            headers: {
+                'X-API-KEY': process.env.REPORT_API,
+            },
+            params:{
+                template_id: process.env.REPORT_TEMPLATE_ID,
+                export_type: 'json',
+            }
+        });
+
+        const downloadUrl = response.data.download_url;
+
+        if(!downloadUrl){
+            console.error("PDF generation succeeded but no download_url was returned.", response.data);
+            throw new Error("Failed to retrieve PDF download link.");
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Report generated successfully!",
+            downloadUrl: downloadUrl
+        })
 
     }catch(err){
-
+        console.error("Error generating report:", err.response ? err.response.data : err.message);
+        res.status(500).json({ success: false, message: "Server error while generating report" });
     }
 }
