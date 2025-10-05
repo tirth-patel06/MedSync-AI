@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Plus, Trash2, Clock, Pill, Calendar, Check } from 'lucide-react';
 import { useMedicine } from '../context/medicationContext';
 import {useNotification} from '../context/notificationContext'

@@ -47,8 +47,6 @@ export const MedicineProvider = ({ children }) => {
     }
     ,[localuser]);
  
-
-
     const medicineStatus =useCallback(async(medId)=>{
       try{
         const response = await axios.post('http://localhost:8080/api/medicine/status', {localuser,medId});  
