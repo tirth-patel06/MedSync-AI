@@ -82,7 +82,7 @@ export default async function emergencyModelHandler(req, res) {
     const result = await chain.call({ input });
 
     try {
-      await Conversation.create({ summary, input, output: result.text, model: "emergency_model" });
+      await Conversation.create({ summary, input, output: result.text, model: "emergency_model", user: req.user.id});
     } catch (err) {
       console.error("Error saving conversation:", err);
     }

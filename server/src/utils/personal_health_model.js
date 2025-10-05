@@ -97,7 +97,7 @@ export default async function personalHealthModelHandler(req, res) {
     const result = await chain.call({ input });
 
     try {
-      await Conversation.create({ summary, input, output: result.text, model: "personal_health_model" });
+      await Conversation.create({ summary, input, output: result.text, model: "personal_health_model", user: req.user.id});
     } catch (err) {
       console.error("Error saving conversation:", err);
     }

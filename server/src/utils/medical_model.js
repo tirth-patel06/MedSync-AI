@@ -73,7 +73,7 @@ export default async function medicalModelHandler(req, res) {
     const result = await chain.call({ input });
 
     try {
-      await Conversation.create({ summary, input, output: result.text, model: "medical_model" });
+      await Conversation.create({ summary, input, output: result.text, model: "medical_model", user: req.user.id});
     } catch (err) {
       console.error("Error saving conversation:", err);
     }

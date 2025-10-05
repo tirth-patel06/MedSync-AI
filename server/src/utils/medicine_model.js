@@ -75,7 +75,7 @@ export default async function medicineModelHandler(req, res) {
 
     // persist conversation (best-effort)
     try {
-      await Conversation.create({ summary, input, output: result.text, model: "medicine_model" });
+      await Conversation.create({ summary, input, output: result.text, model: "medicine_model", user: req.user.id});
     } catch (err) {
       console.error("Error saving conversation:", err);
     }
