@@ -35,7 +35,7 @@ export const MedicineProvider = ({ children }) => {
      try {
        console.log("medication",medication);
        console.log("localuser",localuser);
-       const response = await axios.post('http://localhost:8080/api/medicine/add', {medication,userId: localuser.id});  
+       const response = await axios.post('http://localhost:8080/api/medicine/add', {medication,localuser});  
        console.log('Medication added successfully:', response.data);
      }
      catch (error) {
@@ -47,7 +47,7 @@ export const MedicineProvider = ({ children }) => {
     const todayMedication=useCallback(async()=>{
       if (!localuser?.id) return [];
       try {       
-        const response = await axios.post('http://localhost:8080/api/medicine/today', {userId: localuser.id});  
+        const response = await axios.post('http://localhost:8080/api/medicine/today', {localuser});  
         console.log('todays medicine fetched succesfully', response.data);
         return response.data;
       }
@@ -60,7 +60,7 @@ export const MedicineProvider = ({ children }) => {
      const medicineStatus =useCallback(async(medId)=>{
       if (!localuser?.id) return;
        try{
-         const response = await axios.post('http://localhost:8080/api/medicine/status', {userId: localuser.id,medId});  
+         const response = await axios.post('http://localhost:8080/api/medicine/status', {localuser,medId});  
         console.log('status changed sucessfully', response.data);
         return response.data;
        }
