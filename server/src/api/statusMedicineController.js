@@ -8,6 +8,8 @@ export const medicineStatus = async (req, res) => {
     const { localuser, medId, dosageTimeIndex } = req.body || {};
  
      
+
+
 //did this bifurcation bcz local user format is diff in diff parts....
 //it handles all the formats
     let userId = null;
@@ -29,6 +31,7 @@ export const medicineStatus = async (req, res) => {
       return res.status(400).json({ success: false, message: "Missing medId" });
     }
 
+    
     // Find the medicine document belonging to this user
     const medicine = await Medication.findOne({ _id: medId, userId: userId });
     if (!medicine) {

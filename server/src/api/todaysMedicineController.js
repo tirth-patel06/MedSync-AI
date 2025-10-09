@@ -16,6 +16,8 @@ function parseDuration(str) {
   return 0;
 }
 
+
+
 export  const todaysMedication= async(req,res)=>{
      // Debug: log entire request body to inspect shape
      console.log("Request body for today's meds:", JSON.stringify(req.body, null, 2));
@@ -38,7 +40,6 @@ export  const todaysMedication= async(req,res)=>{
       console.error("Could not determine user id from localuser:", localuser);
       return res.status(400).json({ success: false, message: 'Missing or invalid localuser in request body' });
     }
-
 
 
 
