@@ -82,9 +82,9 @@ const getUserAndHealthData = async (userId) => {
 }
 
 
-export default generateReport = async (req, res) => {
+const generateReport = async (req, res) => {
     try{
-        const userId = req.user.id;
+        const userId = req.body.user.id;
         const { periodInDays = 30 } = req.body;     // time peeriod for which we generate the report
 
         const startDate = new Date();
@@ -136,3 +136,5 @@ export default generateReport = async (req, res) => {
         res.status(500).json({ success: false, message: "Server error while generating report" });
     }
 }
+
+export default generateReport;

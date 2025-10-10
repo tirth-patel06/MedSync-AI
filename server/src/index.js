@@ -11,6 +11,7 @@ import startNotificationScheduler from "./api/notificationController.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import healthRoutes from "./routes/healthRoutes.js"
 import agentsRoutes from "./routes/agentsRoutes.js";
+import reportRoutes from "./routes/reportRoutes.js";
 
 import oauthRoutes from "./routes/oauth.js";
 import analyticsRoutes from "./routes/analytics.js";
@@ -56,6 +57,7 @@ app.use("/api/notification",notificationRoutes );
 app.use("/api/medicine",MedicineRoutes );
 app.use("/api/health", healthRoutes);
 app.use("/api/oauth", oauthRoutes);
+app.use("/api/report", reportRoutes);
 
 app.use("/api/analytics", analyticsRoutes);
 
