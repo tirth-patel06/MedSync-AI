@@ -13,7 +13,7 @@ const Reports = () => {
 
     try {
       const token = localStorage.getItem("token"); // auth token
-      const res = await fetch("http://localhost:5000/api/report", {
+      const res = await fetch("http://localhost:8080/api/report", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

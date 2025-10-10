@@ -15,7 +15,6 @@ import reportRoutes from "./routes/reportRoutes.js";
 
 import oauthRoutes from "./routes/oauth.js";
 import analyticsRoutes from "./routes/analytics.js";
-import reportRoutes from "./routes/reportRoutes.js";
 import authMiddleware from "./middlewares/authMiddleware.js";
 
 
