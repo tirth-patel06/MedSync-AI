@@ -1,9 +1,9 @@
 import express from 'express';
-import authMiddleware from '../middlewares/authMiddleware';
-import generateReport from '../api/reportController';
+import authMiddleware from '../middlewares/authMiddleware.js';
+import generateReport from '../api/reportController.js';
 
 const router = express.Router();
 
-router.post("/report", authMiddleware, generateReport);
+router.post("/", generateReport);
 
 export default router;

@@ -6,7 +6,11 @@ import {
 } from 'lucide-react';
 import { useMedicine } from '../context/medicationContext.jsx';
 import { useNotification } from '../context/notificationContext.jsx';
+
 import { useCalendarSync } from '../context/calendarSyncContext.jsx';
+
+import Analytics from "./Analytics";
+
 
 export default function Dashboard() {
 
@@ -25,6 +29,24 @@ export default function Dashboard() {
   const [linked, setLinked] = useState(false);
   const [account, setAccount] = useState('');
 
+  const [currentUser, setCurrentUser] = useState(null);
+
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    console.log("storedUser: ",storedUser);
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        console.log("Loaded currentUser:", parsedUser);
+        setCurrentUser(parsedUser);
+      } catch (error) {
+        console.error("Error parsing stored user:", error);
+      }
+    } else {
+      console.warn("No user found in localStorage");
+    }
+  }, []);
 
 
 
@@ -295,6 +317,13 @@ export default function Dashboard() {
             <p className="text-xs text-slate-500 mt-1">Great progress!</p>
           </div>
         </div>
+
+        {/* Analytics Section */}
+        {currentUser && (
+          <div className="mt-8">
+            <Analytics userId={currentUser?.id || currentUser?._id} />
+          </div>
+        )}
 
         {/* Main Grid */}
         <div className="grid lg:grid-cols-3 gap-6">

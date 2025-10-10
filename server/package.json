@@ -27,8 +27,11 @@
     "googleapis": "^161.0.0",
     "jsonwebtoken": "^9.0.2",
     "langchain": "^0.3.35",
+    "mongodb": "^6.20.0",
     "mongoose": "^8.19.0",
     "node-notifier": "^10.0.1",
+    "multer": "^2.0.2",
+    "pdf-parse": "^1.1.1",
     "socket.io": "^4.8.1"
   }
 }
