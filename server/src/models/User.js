@@ -8,6 +8,14 @@ const userSchema = new mongoose.Schema({
     type: Object,  // stores access_token, refresh_token, expiry_date, etc.
     default: null,
   },
+  lastCalendarSync: { 
+    type: Date, 
+    default: null 
+  },
+  calendarSyncEnabled: { 
+    type: Boolean, 
+    default: false 
+  }
 }, { timestamps: true });
 
 export default mongoose.model("User", userSchema);

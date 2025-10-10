@@ -71,12 +71,29 @@ export const MedicineProvider = ({ children }) => {
      },[localuser])
    
  
- 
-     
- 
- 
+   // Fetch user's streak days
+   const getStreakDays = useCallback(async () => {
+    if (!localuser?.id) return 0;
+    try {
+      const response = await axios.post('http://localhost:8080/api/streak', { localuser });
+      if (response.data && response.data.success) {
+        return response.data.streakDays || 8;
+      }
+      return 8;
+    } catch (error) {
+      console.error('Error fetching streak days:', error);
+      return 0;
+    }
+   }, [localuser]);
+
    return (
-     <MedicineContext.Provider value={{medication, setMedication,addMedication,todayMedication,medicineStatus}}>
+     <MedicineContext.Provider value={{
+       medication, setMedication,
+       addMedication,
+       todayMedication,
+       medicineStatus,
+       getStreakDays
+     }}>
        {children}
      </MedicineContext.Provider>
    );

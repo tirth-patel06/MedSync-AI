@@ -2,17 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { 
   Pill, Calendar, TrendingUp, Clock, CheckCircle, XCircle, AlertCircle,
   Flame, Sparkles, MessageSquare, Brain, Heart, Activity, FileText,
-  Settings, LogOut, Plus, ChevronRight, Bell, Menu
+  Settings, LogOut, Plus, ChevronRight, Bell, Menu, RefreshCw, CheckCircle2
 } from 'lucide-react';
 import { useMedicine } from '../context/medicationContext.jsx';
 import { useNotification } from '../context/notificationContext.jsx';
+
+import { useCalendarSync } from '../context/calendarSyncContext.jsx';
+
 import Analytics from "./Analytics";
+
 
 export default function Dashboard() {
 
-  const{todayMedication,medicineStatus}=useMedicine();
+  const{todayMedication,medicineStatus,getStreakDays}=useMedicine();
 
   const{notifications,sendNotification,fetchTodayNotifications}=useNotification();
+  
+  const { syncStatus, checkSyncStatus, syncToCalendar, connectCalendar } = useCalendarSync();
 
   const [medications, setMedications] = useState([]);
   const [filteredMeds, setFilteredMeds] = useState([]);
@@ -21,6 +27,7 @@ export default function Dashboard() {
   const [streak, setStreak] = useState(12);  //  will add it for afterwards(streak = number of days for 100% adherence)
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [linked, setLinked] = useState(false);
+  const [account, setAccount] = useState('');
 
   const [currentUser, setCurrentUser] = useState(null);
 
@@ -45,7 +52,9 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchTodayMedications();
-  }, []);
+    getStreakDays().then(setStreak);
+    checkSyncStatus(); // Check calendar sync status on load
+  }, [checkSyncStatus]);
 
   useEffect(() => {
     filterMedications();
@@ -64,11 +73,6 @@ export default function Dashboard() {
       setLoading(false);
     }
   };
-
-
-
-
-
 
   
   const filterMedications = () => {
@@ -141,40 +145,27 @@ export default function Dashboard() {
 
   const handleConnectCalendar = async () => {
     try {
-      const localuser = JSON.parse(localStorage.getItem("user"));
-      if (!localuser?.id) return alert("Please log in first");
-
-      // Go directly to the backend OAuth login endpoint 
-      // oAuth does not work with fetch you need to redirect
-      window.location.href = `http://localhost:8080/api/oauth/login?userId=${localuser.id}`;
+      connectCalendar();
     } catch (err) {
       console.error(err);
     }
   };
 
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    console.log("debug 1");
-    const userId = user?.id || user?._id; 
-    console.log("debug 2");
-    if (!userId) {
-      console.log("userId:", userId);
-      console.warn("User ID not found in localStorage!");
-      return;
+  const handleSyncCalendar = async () => {
+    try {
+      const result = await syncToCalendar();
+      alert(`Success! Synced ${result.syncedEvents} medication events to Google Calendar.`);
+      // Refresh sync status
+      await checkSyncStatus();
+    } catch (error) {
+      console.error('Sync error:', error);
+      alert(`Sync failed: ${error.message || 'Unknown error'}`);
     }
-    console.log("debug 3");
-    fetch(`http://localhost:8080/api/oauth/calendar/status/${userId}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.linked) {
-          setLinked(true);
-          setAccount(data.account);
-        } else {
-          setLinked(false);
-        }
-      });
-      console.log("debug 4");
-  }, []);
+  };
+
+
+  
+  // Removed old calendar status logic - now using CalendarSyncContext
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
@@ -212,14 +203,43 @@ export default function Dashboard() {
               <Settings className="w-5 h-5" />
               <span>Health Profile</span>
             </button>
-            {linked ? (
-              <p className="text-green-500">✅ Linked to {account}</p>
+            
+            {/* Calendar Sync Section */}
+            <div className="pt-4 border-t border-slate-700">
+              <p className="text-slate-500 text-xs font-medium mb-2 px-4">CALENDAR SYNC</p>
+              
+              {syncStatus.isLinked ? (
+                <div className="space-y-2">
+                  <div className="px-4 py-2 text-emerald-400 text-sm flex items-center space-x-2">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Google Calendar Connected</span>
+                  </div>
+                  
+                  <button 
+                    onClick={handleSyncCalendar}
+                    disabled={syncStatus.isSyncing}
+                    className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500/20 to-green-500/20 border border-emerald-500/30 text-emerald-400 hover:from-emerald-500/30 hover:to-green-500/30 transition-all disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-5 h-5 ${syncStatus.isSyncing ? 'animate-spin' : ''}`} />
+                    <span>{syncStatus.isSyncing ? 'Syncing...' : 'Sync Medications'}</span>
+                  </button>
+                  
+                  {syncStatus.lastSync && (
+                    <p className="text-slate-500 text-xs px-4">
+                      Last sync: {new Date(syncStatus.lastSync).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
               ) : (
-              <button onClick={handleConnectCalendar} className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-slate-800/50 text-slate-400 hover:text-white transition-all">
-                <Calendar className="w-5 h-5" />
-                <span>Connect Google Calendar</span>
+                <button 
+                  onClick={handleConnectCalendar} 
+                  className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-slate-800/50 text-slate-400 hover:text-white transition-all"
+                >
+                  <Calendar className="w-5 h-5" />
+                  <span>Connect Google Calendar</span>
                 </button>
-            )}
+              )}
+            </div>
           </nav>
 
           <div className="absolute bottom-6 left-6 right-6">
@@ -447,6 +467,20 @@ export default function Dashboard() {
                   <div className="flex items-center space-x-3">
                     <FileText className="w-5 h-5 text-cyan-400" />
                     <span className="text-sm">Generate Report</span>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-slate-600 group-hover:text-white transition-colors" />
+                </button>
+                <button onClick={() => window.location.href = '/reportChat'} className="w-full flex items-center justify-between px-4 py-3 bg-slate-800/50 hover:bg-slate-800 rounded-xl transition-all group">
+                  <div className="flex items-center space-x-3">
+                    <FileText className="w-5 h-5 text-pink-400" />
+                    <span className="text-sm">Chat With Report</span>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-slate-600 group-hover:text-white transition-colors" />
+                </button>
+                <button onClick={() => window.location.href = '/report-analysis'} className="w-full flex items-center justify-between px-4 py-3 bg-slate-800/50 hover:bg-slate-800 rounded-xl transition-all group">
+                  <div className="flex items-center space-x-3">
+                    <FileText className="w-5 h-5 text-green-400" />
+                    <span className="text-sm">Analyse Health Report</span>
                   </div>
                   <ChevronRight className="w-5 h-5 text-slate-600 group-hover:text-white transition-colors" />
                 </button>

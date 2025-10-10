@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Clock, Pill, Calendar, Check } from 'lucide-react';
+import { 
+  Plus, Trash2, Clock, Pill, Calendar, Check, ArrowLeft, 
+  Sparkles, AlertCircle, Save, RotateCcw, Copy
+} from 'lucide-react';
 import { useMedicine } from '../context/medicationContext';
-import {useNotification} from '../context/notificationContext'
+import { useNotification } from '../context/notificationContext';
+import { useNavigate } from 'react-router-dom';
 
 
 
 export default function MedicationEntryForm() {
-  const{sendNotification} = useNotification();
+  const navigate = useNavigate();
+  const { sendNotification } = useNotification();
   const { medication, setMedication, addMedication } = useMedicine();  
   const [currentTime, setCurrentTime] = useState({
     time: "",
@@ -14,8 +19,7 @@ export default function MedicationEntryForm() {
     remindAfter: "30m"
   });
   const [showJson, setShowJson] = useState(false);
-
-  const weekDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const [isSubmitting, setIsSubmitting] = useState(false);  const weekDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   const reminderOptions = ["5m", "10m", "15m", "30m", "1h"];
 
   const handleInputChange = (field, value) => {
@@ -58,18 +62,37 @@ export default function MedicationEntryForm() {
     adherenceHistory: []
   });
 
-  const handleSubmit = async() => {
-    if (!medication.pillName) { alert("Please enter pill name"); return; }
-    if (medication.dosageDays.length === 0) { alert("Please select at least one day"); return; }
-    if (medication.dosageTimes.length === 0) { alert("Please add at least one dosage time"); return; }
-    setShowJson(true);
-    addMedication(); 
-
+  const handleSubmit = async () => {
+    if (!medication.pillName) { 
+      alert("Please enter pill name"); 
+      return; 
+    }
+    if (medication.dosageDays.length === 0) { 
+      alert("Please select at least one day"); 
+      return; 
+    }
+    if (medication.dosageTimes.length === 0) { 
+      alert("Please add at least one dosage time"); 
+      return; 
+    }
+    
+    setIsSubmitting(true);
+    try {
+      await addMedication();
+      setShowJson(true);
+      // Navigate back to dashboard after successful submission
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 2000);
+    } catch (error) {
+      console.error('Error adding medication:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const resetForm = () => {
     setMedication({
-     
       pillName: "",
       pillDescription: "",
       dosageDays: [],
@@ -83,18 +106,35 @@ export default function MedicationEntryForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
+        
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent mb-2">
-            🧙‍♂️ Alchemist's Grimoire
-          </h1>
-          <p className="text-purple-300 text-lg">Add Your Magical Remedy</p>
-        </div>
+        <header className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <button 
+              onClick={() => navigate("/dashboard")}
+              className="p-3 hover:bg-slate-800/50 rounded-xl transition-all group"
+            >
+              <ArrowLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
+            </button>
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-rose-400 bg-clip-text text-transparent">
+                Add New Medication
+              </h1>
+              <p className="text-slate-400">Create a new medication schedule</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-orange-500/20 to-rose-500/20 rounded-xl flex items-center justify-center">
+              <Pill className="w-6 h-6 text-orange-400" />
+            </div>
+          </div>
+        </header>
 
-        {/* Main Card */}
-        <div className="bg-gray-800 bg-opacity-50 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-purple-500 border-opacity-20 space-y-6">
+        {/* Main Form Card */}
+        <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl p-8 border border-slate-800 space-y-8">
           
         
           {/* Pill Name */}

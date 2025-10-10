@@ -13,13 +13,15 @@ const Reports = () => {
 
     try {
       const token = localStorage.getItem("token"); // auth token
+      const user = JSON.parse(localStorage.getItem("user"));
+      const userId = user?.id || user?._id;
       const res = await fetch("http://localhost:8080/api/report", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ periodInDays: period }),
+        body: JSON.stringify({ periodInDays: period, userId }),
       });
 
       const data = await res.json();

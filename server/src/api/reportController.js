@@ -84,7 +84,8 @@ const getUserAndHealthData = async (userId) => {
 
 const generateReport = async (req, res) => {
     try{
-        const userId = req.user.id;
+        const userId = req.body.user?.id || req.body.userId || req.user?._id;
+        console.log("userId: ",userId);
         const { periodInDays = 30 } = req.body;     // time peeriod for which we generate the report
 
         const startDate = new Date();

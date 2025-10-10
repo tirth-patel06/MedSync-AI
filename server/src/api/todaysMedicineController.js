@@ -16,8 +16,7 @@ function parseDuration(str) {
   return 0;
 }
 
-
-
+``
 export  const todaysMedication= async(req,res)=>{
      // Debug: log entire request body to inspect shape
      console.log("Request body for today's meds:", JSON.stringify(req.body, null, 2));
