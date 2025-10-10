@@ -26,7 +26,13 @@ let reportText = ""; // store extracted PDF text
 export const generateAnalysis = async (req, res) => {
   try {
     const pdfBuffer = req.file ? req.file.buffer || null : null;
-    const userId = 'NA';
+
+    if (!req.body.user) {
+      return res.status(400).json({ error: "User data is missing from the request." });
+    }
+
+    const userInfo = JSON.parse(req.body.user);
+    const userId = userInfo.id;
 
     console.log("File info:", req.file);
 

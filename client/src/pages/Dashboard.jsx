@@ -470,6 +470,27 @@ export default function Dashboard() {
                   </div>
                   <ChevronRight className="w-5 h-5 text-slate-600 group-hover:text-white transition-colors" />
                 </button>
+                <button onClick={() => window.location.href = '/reportChat'} className="w-full flex items-center justify-between px-4 py-3 bg-slate-800/50 hover:bg-slate-800 rounded-xl transition-all group">
+                  <div className="flex items-center space-x-3">
+                    <FileText className="w-5 h-5 text-pink-400" />
+                    <span className="text-sm">Chat With Report</span>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-slate-600 group-hover:text-white transition-colors" />
+                </button>
+                <button onClick={() => window.location.href = '/report-analysis'} className="w-full flex items-center justify-between px-4 py-3 bg-slate-800/50 hover:bg-slate-800 rounded-xl transition-all group">
+                  <div className="flex items-center space-x-3">
+                    <FileText className="w-5 h-5 text-green-400" />
+                    <span className="text-sm">Analyse Health Report</span>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-slate-600 group-hover:text-white transition-colors" />
+                </button>
+                <button onClick={() => window.location.href = '/calendar-sync'} className="w-full flex items-center justify-between px-4 py-3 bg-slate-800/50 hover:bg-slate-800 rounded-xl transition-all group">
+                  <div className="flex items-center space-x-3">
+                    <Calendar className="w-5 h-5 text-orange-400" />
+                    <span className="text-sm">Sync Calendar</span>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-slate-600 group-hover:text-white transition-colors" />
+                </button>
               </div>
             </div>
 
