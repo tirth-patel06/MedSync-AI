@@ -63,11 +63,6 @@ app.use("/api/report", reportRoutes);
 
 app.use("/api/analytics", analyticsRoutes);
 
-app.use("/api/oauth", oauthRoutes);
-
-app.use("/api/analytics", analyticsRoutes);
-app.use("/api/report", reportRoutes);
-
 // Test route
 app.get("/", (req, res) => {
   res.send("Backend is running...");
