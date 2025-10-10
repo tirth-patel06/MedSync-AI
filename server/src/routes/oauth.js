@@ -5,12 +5,16 @@ import User from "../models/User.js"; // assuming you have a user model
 
 const router = express.Router();
 
+
+
 // Step 1: Send the user to Google OAuth login
 router.get("/login", (req, res) => {
   const userId = req.query.userId;
   const url = getAuthUrl(userId);
   res.redirect(url); // user goes to Google consent screen
 });
+
+
 
 // Step 2: Google redirects back with a code
 router.get("/callback", async (req, res) => {
