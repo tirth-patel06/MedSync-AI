@@ -10,6 +10,12 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 import healthRoutes from "./routes/health.js"
 import agentsRoutes from "./routes/agentsRoutes.js";
 
+import oauthRoutes from "./routes/oauth.js";
+import analyticsRoutes from "./routes/analytics.js";
+import reportRoutes from "./routes/reportRoutes.js";
+import authMiddleware from "./middlewares/authMiddleware.js";
+
+
 
 dotenv.config();
 
@@ -33,6 +39,11 @@ app.use("/api/auth", authRoutes);
 app.use("/api/notification",notificationRoutes );
 app.use("/api/medicine",MedicineRoutes );
 app.use("/api/health", healthRoutes);
+
+app.use("/api/oauth", oauthRoutes);
+
+app.use("/api/analytics", analyticsRoutes);
+app.use("/api/report", reportRoutes);
 
 // Test route
 app.get("/", (req, res) => {
