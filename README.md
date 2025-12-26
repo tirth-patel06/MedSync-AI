@@ -227,6 +227,55 @@ Install dependencies with `npm install` in the `server/` directory after adding 
 
 ---
 
+## Multilingual Phase 3 (Readability Checker Implementation)
+
+Phase 3 implements text readability analysis for medical content across multiple languages:
+
+- **Readability Checker** (`server/src/utils/readabilityChecker.js`): Analyzes text readability using:
+  - **Flesch-Kincaid Grade Level** — Estimates US grade level required to understand text (0-16+)
+  - **Flesch Reading Ease** — Scores text on 0–100 scale (higher = easier to read)
+  - **Language-specific adaptation** — Adjusted algorithms for English, Spanish, and Hindi
+  - **Syllable counting** — Implements multi-language syllable detection
+  - **Recommendations** — Generates actionable simplification suggestions
+
+- **Readability Configuration** (`server/src/utils/readabilityConfig.js`): Defines:
+  - Complexity thresholds for medical content (simple/moderate/complex)
+  - Reading level categories with Flesch scores and grade mappings
+  - Language-specific targets (e.g., optimal words per sentence)
+  - Color coding for UI indicators (green/yellow/red)
+  - Simplification suggestion templates
+
+- **API Response Format**:
+```javascript
+{
+  fleschKincaid: 8.5,        // Grade level
+  fleschReadingEase: 65.2,   // 0-100 ease score
+  readingLevel: 'high',      // Category key
+  readingLevelLabel: 'High School',
+  grade: 8,                  // Rounded grade
+  isTooComplex: false,       // Above threshold?
+  statistics: {
+    wordCount: 150,
+    sentenceCount: 8,
+    syllableCount: 250,
+    averageWordsPerSentence: 18.75,
+    averageSyllablesPerWord: 1.67
+  },
+  recommendations: [
+    "✓ Text is at appropriate reading level for medical content",
+    "📌 Consider shorter sentences...",
+    "💡 Medical terms are acceptable..."
+  ]
+}
+```
+
+- **Language support**: English (standard Flesch-Kincaid), Spanish (adapted coefficients), Hindi (Devanagari-aware syllable counting)
+- **Accessibility**: Color-coded complexity assessment, detailed metrics, and specific improvement suggestions
+
+Install dependencies with `npm install` in the `server/` directory (includes `syllable` package for enhanced syllable counting).
+
+---
+
 ## 🤝 How to contribute
 
 1. **Pick an issue:** Start with “good first issue” or “help wanted,” or open a discussion if unsure.
