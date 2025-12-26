@@ -304,7 +304,52 @@ Phase 4 exposes translation, language preference, and report readability/transla
 Run `npm install` in `server/` if you haven’t added dependencies yet.
 
 ---
+## Multilingual Phase 5 (Frontend UI Components)
 
+Phase 5 provides React components, context, and hooks for multilingual UX on the client:
+
+- **Language Context** (`client/src/context/languageContext.jsx`): Global state management
+  - Fetches user's preferred language from the backend on mount
+  - Methods: `setLanguage(code)`, `translateText(text, lang?, context?)`, `translateBatch(texts[], lang?)`
+  - Gracefully handles API failures (fallback to defaults)
+
+- **useTranslation Hook** (`client/src/hooks/useTranslation.js`): Custom hook to access:
+  - `language` — Current language code
+  - `setLanguage` — Update preference
+  - `supportedLanguages` — List of available languages
+  - `translateText` — Translate a single text
+  - `translateBatch` — Batch translate multiple texts
+  - `loading`, `error` — State and error tracking
+
+- **LanguageSwitcher Component** (`client/src/components/LanguageSwitcher.jsx`):
+  - Dropdown button in Navbar showing current language (native name, e.g., "Español")
+  - Displays all supported languages with native names
+  - Accessible (ARIA labels, keyboard navigation)
+  - Updates backend user preference on selection
+  - Styled with Tailwind (blue gradient, icons via lucide-react)
+
+- **ReadabilityIndicator Component** (`client/src/components/ReadabilityIndicator.jsx`):
+  - Badge showing Flesch-Kincaid grade level with color coding:
+    - 🟢 Green: Grades 1–6 (easy)
+    - 🟡 Yellow: Grades 7–12 (moderate)
+    - 🔴 Red: Grade 13+ (complex)
+  - Interactive tooltip with grade details on hover
+  - Optional `showDetails` and `showRecommendations` props
+  - Displays actionable suggestions for simplification
+
+- **TranslationBadge Component** (`client/src/components/TranslationBadge.jsx`):
+  - Shows "Originally [Language]" indicator when text is translated
+  - Optional button to toggle back to original language
+  - Subtle blue styling; hidden if not translated
+  - Accessible labels for screen readers
+
+- **Integration**:
+  - `LanguageSwitcher` added to Navbar
+  - `LanguageProvider` wraps app in App.jsx
+  - All components use Tailwind CSS + lucide-react icons
+  - Built-in loading states and error handling
+
+---
 ## 🤝 How to contribute
 
 1. **Pick an issue:** Start with “good first issue” or “help wanted,” or open a discussion if unsure.
