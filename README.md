@@ -173,6 +173,25 @@ If you change backend ports/hosts, update these values. Align `VITE_SOCKET_URL` 
 - **Google Calendar sync:** Optional calendar integration for medication schedules.
 - **Dashboard:** Today’s meds, adherence stats, and streaks at a glance.
 
+## Multilingual Phase 1 (schema & API updates)
+
+- User schema now includes `preferredLanguage` (enum: `en`, `es`, `hi`; default: `en`). APIs that return user objects should surface this, and clients can send it during signup/update.
+- Report schema stores `translatedAnalysis` (Map of language code → text), `originalLanguage` (default `en`), and `readabilityScore` ({ fleschKincaid, fleschReadingEase, readingLevel, grade }). These fields are optional and safe for existing documents.
+- Medication schema adds `originalInstructions` and `translatedInstructions` (`es`, `hi`) to hold multilingual dosage directions; these are optional.
+- Migration/backfill guidance: fields are non-breaking with defaults. If you want to backfill existing data, run a one-time script such as:
+
+```js
+// From a Mongo shell or script with Mongoose connected
+db.reports.updateMany({ originalLanguage: { $exists: false } }, { $set: { originalLanguage: "en" } });
+db.users.updateMany({ preferredLanguage: { $exists: false } }, { $set: { preferredLanguage: "en" } });
+db.medications.updateMany(
+   { originalInstructions: { $exists: false } },
+   { $set: { originalInstructions: "" } }
+);
+```
+
+These changes complete Phase 1 of the multilingual implementation plan and keep existing data intact.
+
 ---
 
 ## 🤝 How to contribute

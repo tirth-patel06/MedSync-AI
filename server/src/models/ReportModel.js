@@ -13,6 +13,21 @@ const reportSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  translatedAnalysis: {
+    type: Map,
+    of: String,
+    default: undefined,
+  },
+  originalLanguage: {
+    type: String,
+    default: "en",
+  },
+  readabilityScore: {
+    fleschKincaid: { type: Number },
+    fleschReadingEase: { type: Number },
+    readingLevel: { type: String },
+    grade: { type: Number },
+  },
   userId: {
     type: String,
     required: true,
