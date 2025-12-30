@@ -3,7 +3,8 @@ import NodeCache from 'node-cache';
 import { SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from '../utils/languageConfig.js';
 import { MEDICAL_TERMS } from '../utils/medicalTerminology.js';
 
-const cache = new NodeCache({ stdTTL: process.env.TRANSLATION_CACHE_TTL || 86400 });
+const ttl = parseInt(process.env.TRANSLATION_CACHE_TTL, 10);
+const cache = new NodeCache({ stdTTL: Number.isNaN(ttl) ? 86400 : ttl });
 
 class TranslationService {
   constructor() {
@@ -22,26 +23,25 @@ class TranslationService {
    */
   async translateText(text, targetLang = DEFAULT_LANGUAGE, context = 'medical') {
     if (targetLang === DEFAULT_LANGUAGE) {
-      return text; // No translation needed
+      return { success: true, translatedText: text, originalText: text };
     }
 
     const cacheKey = this.getCacheKey(text, targetLang, context);
     const cached = this.getCachedTranslation(cacheKey);
     
     if (cached) {
-      return cached;
+      return { success: true, translatedText: cached, originalText: text };
     }
 
     try {
       let translated = await this.callTranslationAPI(text, DEFAULT_LANGUAGE, targetLang, context);
-      
       // Store in cache
       cache.set(cacheKey, translated);
-      return translated;
+      return { success: true, translatedText: translated, originalText: text };
     } catch (error) {
       console.error(`Translation error for "${text}" to ${targetLang}:`, error.message);
       // Fallback to original text if translation fails
-      return text;
+      return { success: false, translatedText: text, originalText: text, error: error.message };
     }
   }
 

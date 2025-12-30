@@ -1,4 +1,4 @@
-import { defineConfig } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './src/__tests__/e2e',
@@ -41,4 +41,4 @@ export default defineConfig({
   },
 });
 
-const { devices } = require('@playwright/test');
+

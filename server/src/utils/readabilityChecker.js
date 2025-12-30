@@ -344,14 +344,11 @@ class ReadabilityChecker {
 
     // Count vowel sounds (full vowels + vowel marks)
     let syllableCount = 0;
-    let hasVowelMark = false;
 
     for (let i = 0; i < word.length; i++) {
       if (devanagariVowels.includes(word[i])) {
         syllableCount++;
-      } else if (devanagariVowelMarks.includes(word[i])) {
-        hasVowelMark = true;
-      }
+      } // else if (devanagariVowelMarks.includes(word[i])) { /* intentionally ignored */ }
     }
 
     // Add syllable for word-initial consonant without explicit vowel mark

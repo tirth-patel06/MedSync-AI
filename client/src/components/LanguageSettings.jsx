@@ -4,7 +4,7 @@ import { useLanguage } from '../../hooks/useTranslation';
 import axios from 'axios';
 
 export default function LanguageSettings() {
-  const { supportedLanguages, currentLanguage, setLanguage } = useLanguage();
+  const { supportedLanguages, language, setLanguage } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const dropdownRef = useRef(null);
@@ -22,7 +22,7 @@ export default function LanguageSettings() {
   }, []);
 
   const handleLanguageChange = async (langCode) => {
-    if (langCode === currentLanguage) {
+    if (langCode === language) {
       setIsOpen(false);
       return;
     }

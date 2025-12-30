@@ -16,7 +16,7 @@ const ReportAnalysis = () => {
   const [showTranslated, setShowTranslated] = useState(false);
   const [translating, setTranslating] = useState(false);
   const [reportId, setReportId] = useState(null);
-  const { language, supportedLanguages, translateText } = useLanguage();
+  const { supportedLanguages } = useLanguage();
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);

@@ -24,7 +24,7 @@ const READING_LEVELS = [
 
 export default function Settings() {
   const navigate = useNavigate();
-  const { supportedLanguages, currentLanguage } = useLanguage();
+  const { supportedLanguages } = useLanguage();
   
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);

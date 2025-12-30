@@ -3,7 +3,6 @@ import request from 'supertest';
 import express from 'express';
 import translationRoutes from '../src/routes/translationRoutes.js';
 import languageRoutes from '../src/routes/languageRoutes.js';
-import authMiddleware from '../src/middlewares/authMiddleware.js';
 
 // Mock services
 vi.mock('../src/services/translationService.js');

@@ -95,7 +95,7 @@ describe('LanguageSwitcher Component', () => {
   });
 
   it('should close dropdown when clicking outside', async () => {
-    const { container } = render(<MockedLanguageSwitcher />);
+    render(<MockedLanguageSwitcher />);
     
     await waitFor(() => {
       const button = screen.getByRole('button');

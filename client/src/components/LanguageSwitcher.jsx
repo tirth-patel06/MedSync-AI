@@ -7,11 +7,6 @@ export const LanguageSwitcher = ({ className = '' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Get language name by code
-  const getLanguageName = (code) => {
-    const lang = supportedLanguages.find(l => l.code === code);
-    return lang?.name || code.toUpperCase();
-  };
 
   const getNativeLanguageName = (code) => {
     const lang = supportedLanguages.find(l => l.code === code);

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AlertCircle, CheckCircle, MessageCircle, Info } from 'lucide-react';
+import { AlertCircle, CheckCircle, Info } from 'lucide-react';
 
 export const ReadabilityIndicator = ({
   score,

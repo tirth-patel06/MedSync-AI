@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { analyzeReadability, getReadingLevelLabel, getReadabilityColor, getReadingLevelGrade } from '../src/utils/readabilityChecker.js';
+import ReadabilityChecker from '../src/utils/readabilityChecker.js';
+import { getReadingLevelLabel } from '../src/utils/languageConfig.js';
+
+const analyzeReadability = ReadabilityChecker.analyzeReadability.bind(ReadabilityChecker);
 
 describe('Readability Checker', () => {
   describe('analyzeReadability - English', () => {

@@ -29,7 +29,8 @@ describe('Translation Service', () => {
 
       const result = await translationService.translateText('Hello world', 'es');
 
-      expect(result).toBe('Hola mundo');
+      expect(result.success).toBe(true);
+      expect(result.translatedText).toBe('Hola mundo');
       expect(axios.post).toHaveBeenCalledWith(
         expect.stringContaining('translate.googleapis.com'),
         expect.objectContaining({
@@ -108,7 +109,8 @@ describe('Translation Service', () => {
 
       const result = await translationService.translateText('Hello', 'es');
 
-      expect(result).toBe('Hola');
+      expect(result.success).toBe(true);
+      expect(result.translatedText).toBe('Hola');
       expect(axios.post).toHaveBeenCalledTimes(3); // 2 failures + 1 success
     });
 
@@ -117,14 +119,18 @@ describe('Translation Service', () => {
 
       const result = await translationService.translateText('Hello', 'es');
 
-      expect(result).toBe('Hello'); // Fallback to original
+      expect(result.success).toBe(false); // Fallback to original
+      expect(result.translatedText).toBe('Hello');
+      expect(result.originalText).toBe('Hello');
+      expect(result.error).toBeDefined();
       expect(axios.post).toHaveBeenCalledTimes(3); // Max retries
     });
 
     it('should handle empty strings', async () => {
       const result = await translationService.translateText('', 'es');
 
-      expect(result).toBe('');
+      expect(result.success).toBe(true);
+      expect(result.translatedText).toBe('');
       expect(axios.post).not.toHaveBeenCalled(); // Should skip API call
     });
 
@@ -263,8 +269,14 @@ describe('Translation Service', () => {
     });
 
     it('should have cache expiration', async () => {
-      const shortTTL = 1; // 1 second
-      const serviceWithShortTTL = { ...translationService, cache: new (require('node-cache'))({ stdTTL: shortTTL }) };
+      const NodeCache = require('node-cache');
+      class TestTranslationService extends translationService.constructor {
+        constructor() {
+          super();
+          this.cache = new NodeCache({ stdTTL: 1 }); // 1 second TTL
+        }
+      }
+      const testService = new TestTranslationService();
 
       const mockResponse = {
         data: {
@@ -275,13 +287,13 @@ describe('Translation Service', () => {
       };
       axios.post.mockResolvedValue(mockResponse);
 
-      await serviceWithShortTTL.translateText('Hello', 'es');
+      await testService.translateText('Hello', 'es');
       expect(axios.post).toHaveBeenCalledTimes(1);
 
       // Wait for cache to expire
       await new Promise(resolve => setTimeout(resolve, 1100));
 
-      await serviceWithShortTTL.translateText('Hello', 'es');
+      await testService.translateText('Hello', 'es');
       expect(axios.post).toHaveBeenCalledTimes(2); // Called again after expiration
     });
   });

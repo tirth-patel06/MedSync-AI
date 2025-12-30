@@ -14,7 +14,7 @@ export default function MedicationEntryForm() {
   const navigate = useNavigate();
   const { sendNotification } = useNotification();
   const { medication, setMedication, addMedication } = useMedicine();
-  const { translateText, supportedLanguages, currentLanguage } = useLanguage();
+  const { translateText, supportedLanguages } = useLanguage();
   
   const [currentTime, setCurrentTime] = useState({
     time: "",
@@ -22,7 +22,6 @@ export default function MedicationEntryForm() {
     remindAfter: "30m"
   });
   const [showJson, setShowJson] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [translationPreviews, setTranslationPreviews] = useState({});
   const [isTranslating, setIsTranslating] = useState(false);  const weekDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   const reminderOptions = ["5m", "10m", "15m", "30m", "1h"];

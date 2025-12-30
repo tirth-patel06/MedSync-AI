@@ -419,7 +419,7 @@ export default function Dashboard() {
                               title={showOriginal[med._id] ? "Show translated version" : "Show original English"}
                             >
                               <Languages className="w-3 h-3" />
-                              {showOriginal[med._id] ? 'EN' : currentLanguage.toUpperCase()}
+                              {showOriginal[med._id] ? 'EN' : language.toUpperCase()}
                             </button>
                           )}
                         </div>
