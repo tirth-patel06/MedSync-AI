@@ -21,7 +21,7 @@ export default function Dashboard() {
   
   const { syncStatus, checkSyncStatus, syncToCalendar, connectCalendar } = useCalendarSync();
 
-  const { currentLanguage } = useLanguage();
+  // const { currentLanguage } = useLanguage();
 
   const [medications, setMedications] = useState([]);
   const [filteredMeds, setFilteredMeds] = useState([]);
