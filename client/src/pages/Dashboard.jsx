@@ -31,6 +31,7 @@ export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [linked, setLinked] = useState(false);
   const [account, setAccount] = useState('');
+  const [syncToast, setSyncToast] = useState(null); // Toast notification state
 
   const [currentUser, setCurrentUser] = useState(null);
   const [showOriginal, setShowOriginal] = useState({});
@@ -156,14 +157,35 @@ export default function Dashboard() {
   };
 
   const handleSyncCalendar = async () => {
+    console.log("[Dashboard] Sync button clicked");
+    setSyncToast({ type: 'loading', message: 'Syncing medications to Google Calendar...' });
+    
     try {
+      console.log("[Dashboard] Starting sync...");
       const result = await syncToCalendar();
-      alert(`Success! Synced ${result.syncedEvents} medication events to Google Calendar.`);
+      console.log(`[Dashboard] Sync successful:`, result);
+      
+      setSyncToast({
+        type: 'success',
+        message: `Success! Synced ${result.syncedEvents} medication events to Google Calendar.`,
+        details: `${result.syncedMedications} medications processed`
+      });
+      
+      // Auto-hide success toast after 5 seconds
+      setTimeout(() => setSyncToast(null), 5000);
+      
       // Refresh sync status
       await checkSyncStatus();
     } catch (error) {
-      console.error('Sync error:', error);
-      alert(`Sync failed: ${error.message || 'Unknown error'}`);
+      console.error('[Dashboard] Sync error:', error);
+      setSyncToast({
+        type: 'error',
+        message: `Sync failed: ${error.message || 'Unknown error'}`,
+        details: 'Check your Google Calendar connection and try again.'
+      });
+      
+      // Auto-hide error toast after 7 seconds
+      setTimeout(() => setSyncToast(null), 7000);
     }
   };
 
@@ -191,7 +213,7 @@ export default function Dashboard() {
               <Calendar className="w-5 h-5" />
               <span>Dashboard</span>
             </button>
-            <button onClick={() => window.location.href = '/medications'} className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-slate-800/50 text-slate-400 hover:text-white transition-all">
+            <button onClick={() => window.location.href = '/addmedication'} className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-slate-800/50 text-slate-400 hover:text-white transition-all">
               <Pill className="w-5 h-5" />
               <span>Medications</span>
             </button>
@@ -535,6 +557,44 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {syncToast && (
+        <div className={`fixed bottom-6 right-6 max-w-sm rounded-2xl p-4 backdrop-blur-xl border shadow-2xl animate-slideIn z-40 ${
+          syncToast.type === 'success' 
+            ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-100' 
+            : syncToast.type === 'error'
+            ? 'bg-red-500/20 border-red-500/50 text-red-100'
+            : 'bg-blue-500/20 border-blue-500/50 text-blue-100'
+        }`}>
+          <div className="flex items-start space-x-3">
+            <div className="flex-shrink-0 mt-0.5">
+              {syncToast.type === 'loading' && (
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-400 border-t-transparent"></div>
+              )}
+              {syncToast.type === 'success' && (
+                <CheckCircle className="w-5 h-5 text-emerald-400" />
+              )}
+              {syncToast.type === 'error' && (
+                <AlertCircle className="w-5 h-5 text-red-400" />
+              )}
+            </div>
+            <div className="flex-1">
+              <p className="font-medium">{syncToast.message}</p>
+              {syncToast.details && (
+                <p className="text-sm opacity-75 mt-1">{syncToast.details}</p>
+              )}
+            </div>
+            {syncToast.type !== 'loading' && (
+              <button 
+                onClick={() => setSyncToast(null)}
+                className="flex-shrink-0 opacity-75 hover:opacity-100 transition"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -5,31 +5,38 @@ import Medication from "../models/medicineModel.js";
 // Smart Calendar Sync - Main Controller
 export const syncMedicationsToCalendar = async (req, res) => {
   try {
-    const { localuser } = req.body;
+    const userId = req.user?.id;
+    console.log(`[Calendar Sync] Starting sync request for user:`, userId);
     
-    if (!localuser?.id) {
-      return res.status(400).json({ success: false, message: "User ID is required" });
+    if (!userId) {
+      console.warn(`[Calendar Sync] Missing authenticated user ID`);
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     }
-
-    const userId = localuser.id;
-    console.log("🔄 Starting smart calendar sync for user:", userId);
+    console.log(`🔄 Starting smart calendar sync for user:${userId}`);
 
     // Get user and check if Google Calendar is linked
     const user = await User.findById(userId);
     if (!user) {
+      console.error(`[Calendar Sync] User ${userId} not found`);
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
     if (!user.googleTokens) {
+      console.warn(`[Calendar Sync] User ${userId} has no Google tokens. Calendar not linked.`);
       return res.status(400).json({ 
         success: false, 
         message: "Google Calendar not linked. Please connect your calendar first." 
       });
     }
 
+    console.log(`[Calendar Sync] User authenticated. Fetching medications...`);
+
     // Get all user medications
     const medications = await Medication.find({ userId });
+    console.log(`[Calendar Sync] Found ${medications.length} medications for user ${userId}`);
+    
     if (medications.length === 0) {
+      console.log(`[Calendar Sync] No medications to sync for user ${userId}`);
       return res.status(200).json({ 
         success: true, 
         message: "No medications found to sync",
@@ -38,6 +45,7 @@ export const syncMedicationsToCalendar = async (req, res) => {
     }
 
     // Setup Google Calendar API
+    console.log(`[Calendar Sync] Setting up Google Calendar API...`);
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
@@ -47,16 +55,20 @@ export const syncMedicationsToCalendar = async (req, res) => {
     const calendar = google.calendar({ version: "v3", auth: oauth2Client });
 
     // Clear existing medication events (optional - remove old synced events)
+    console.log(`[Calendar Sync] Clearing existing medication events...`);
     await clearExistingMedicationEvents(calendar, userId);
 
     // Smart sync all medications
+    console.log(`[Calendar Sync] Starting smart sync for ${medications.length} medications...`);
     const syncResults = await smartSyncMedications(calendar, medications, userId);
 
     // Update user's last sync time
-    await User.findByIdAndUpdate(userId, { 
+    await User.findByIdAndUpdate(userId, {
       lastCalendarSync: new Date(),
-      calendarSyncEnabled: true 
+      calendarSyncEnabled: true
     });
+
+    console.log(`[Calendar Sync] Sync completed successfully. Created ${syncResults.totalEvents} events`);
 
     return res.status(200).json({
       success: true,
@@ -67,16 +79,17 @@ export const syncMedicationsToCalendar = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Calendar sync error:", error);
+    console.error(`[Calendar Sync] Sync failed:`, error.message);
+    console.error(`Error details:`, error);
     return res.status(500).json({
       success: false,
       message: "Failed to sync medications to calendar",
-      error: error.message
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };
 
-// Smart sync logic - creates optimized calendar events
 async function smartSyncMedications(calendar, medications, userId) {
   let totalEvents = 0;
   const details = [];
@@ -87,7 +100,6 @@ async function smartSyncMedications(calendar, medications, userId) {
       totalEvents += medicationEvents.length;
       
       details.push({
-        pillName: medication.pillName,
         eventsCreated: medicationEvents.length,
         schedule: medication.dosageTimes.map(dt => dt.time),
         days: medication.dosageDays
@@ -97,7 +109,6 @@ async function smartSyncMedications(calendar, medications, userId) {
     } catch (error) {
       console.error(`❌ Failed to sync ${medication.pillName}:`, error);
       details.push({
-        pillName: medication.pillName,
         error: error.message,
         eventsCreated: 0
       });
@@ -110,7 +121,7 @@ async function smartSyncMedications(calendar, medications, userId) {
     details
   };
 }
-
+        
 // Create smart recurring events for a medication
 async function createSmartMedicationEvents(calendar, medication) {
   const events = [];
@@ -289,13 +300,13 @@ async function clearExistingMedicationEvents(calendar, userId) {
 // Get calendar sync status
 export const getCalendarSyncStatus = async (req, res) => {
   try {
-    const { localuser } = req.body;
+    const userId = req.user?.id;
     
-    if (!localuser?.id) {
-      return res.status(400).json({ success: false, message: "User ID is required" });
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
-    const user = await User.findById(localuser.id);
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
