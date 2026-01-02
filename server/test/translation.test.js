@@ -9,7 +9,7 @@ import axios from 'axios';
 describe('Translation Service', () => {
   beforeEach(() => {
     // Clear cache before each test
-    translationService.cache.flushAll();
+    translationService.invalidateCache();
     vi.clearAllMocks();
   });
 
