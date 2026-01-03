@@ -1,26 +1,56 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Plus, Trash2, Clock, Pill, Calendar, Check, ArrowLeft, 
-  Sparkles, AlertCircle, Save, RotateCcw, Copy
+  Sparkles, AlertCircle, Save, RotateCcw, Copy, Languages
 } from 'lucide-react';
 import { useMedicine } from '../context/medicationContext';
 import { useNotification } from '../context/notificationContext';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../hooks/useTranslation.js';
 
 
 
 export default function MedicationEntryForm() {
   const navigate = useNavigate();
   const { sendNotification } = useNotification();
-  const { medication, setMedication, addMedication } = useMedicine();  
+  const { medication, setMedication, addMedication } = useMedicine();
+  const { translateText, supportedLanguages } = useLanguage();
+  
   const [currentTime, setCurrentTime] = useState({
     time: "",
     remindBefore: "15m",
     remindAfter: "30m"
   });
   const [showJson, setShowJson] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);  const weekDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const [translationPreviews, setTranslationPreviews] = useState({});
+  const [isTranslating, setIsTranslating] = useState(false);  const weekDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   const reminderOptions = ["5m", "10m", "15m", "30m", "1h"];
+
+  // 🌐 Debounced translation preview
+  useEffect(() => {
+    if (!medication.pillDescription || medication.pillDescription.trim().length === 0) {
+      setTranslationPreviews({});
+      return;
+    }
+
+    const delayTimer = setTimeout(async () => {
+      setIsTranslating(true);
+      try {
+        const previews = {};
+        for (const lang of supportedLanguages.filter(l => l.code !== 'en')) {
+          const translated = await translateText(medication.pillDescription, lang.code, 'medication');
+          previews[lang.code] = translated;
+        }
+        setTranslationPreviews(previews);
+      } catch (error) {
+        console.error('Translation preview error:', error);
+      } finally {
+        setIsTranslating(false);
+      }
+    }, 1000); // 1 second debounce
+
+    return () => clearTimeout(delayTimer);
+  }, [medication.pillDescription]);
 
   const handleInputChange = (field, value) => {
     setMedication(prev => ({ ...prev, [field]: value }));
@@ -164,6 +194,42 @@ export default function MedicationEntryForm() {
               placeholder="Notes about this medication..."
               className="w-full px-4 py-3 bg-gray-700 bg-opacity-50 border border-purple-500 border-opacity-30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition resize-none"
             />
+            
+            {/* 🌐 Translation Preview */}
+            {medication.pillDescription && medication.pillDescription.trim().length > 0 && (
+              <div className="mt-3 space-y-2">
+                <div className="flex items-center gap-2 text-cyan-400 text-sm">
+                  <Languages className="w-4 h-4" />
+                  <span className="font-medium">Translation Preview</span>
+                  {isTranslating && (
+                    <span className="text-xs text-slate-400">(translating...)</span>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {supportedLanguages.filter(l => l.code !== 'en').map(lang => (
+                    <div 
+                      key={lang.code}
+                      className="bg-slate-800/50 rounded-lg p-3 border border-cyan-500/20"
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs font-medium text-cyan-400">{lang.nativeName}</span>
+                        <span className="text-xs text-slate-500">({lang.code.toUpperCase()})</span>
+                      </div>
+                      <p className="text-sm text-slate-300">
+                        {isTranslating ? (
+                          <span className="text-slate-500 italic">Translating...</span>
+                        ) : (
+                          translationPreviews[lang.code] || medication.pillDescription
+                        )}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-slate-500 italic">
+                  ℹ️ Translations will be automatically saved when you create the medication
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Dosage Amount & Frequency */}

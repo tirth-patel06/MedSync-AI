@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, FileText, ChevronDown, User, Bot, Loader } from 'lucide-react';
+import { Send, FileText, ChevronDown, User, Bot, Loader, Globe } from 'lucide-react';
+import { useLanguage } from '../hooks/useTranslation';
 import axios from 'axios';
 
 const ReportChat = () => {
@@ -9,6 +10,9 @@ const ReportChat = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [localUser, setLocalUser] = useState(null);
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [translatingMessage, setTranslatingMessage] = useState(null);
+  const { language, supportedLanguages, translateText } = useLanguage();
   const chatEndRef = useRef(null);
 
   useEffect(() => {
@@ -17,7 +21,8 @@ const ReportChat = () => {
       setLocalUser(user);
       fetchReports(user);
     }
-  }, []);
+    setSelectedLanguage(language);
+  }, [language]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -35,10 +40,25 @@ const ReportChat = () => {
   const handleSendMessage = async () => {
     if (!input.trim() || !selectedReport || loading) return;
 
+    let questionToSend = input;
+
+    // Translate question if needed
+    if (selectedLanguage !== 'en') {
+      setTranslatingMessage('Translating question...');
+      try {
+        questionToSend = await translateText(input, 'en', 'medical');
+      } catch (err) {
+        console.warn('Translation failed, using original:', err);
+      } finally {
+        setTranslatingMessage(null);
+      }
+    }
+
     const userMessage = {
       role: 'user',
       content: input,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      language: selectedLanguage,
     };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
@@ -46,14 +66,26 @@ const ReportChat = () => {
 
     try {
       const response = await axios.post('http://localhost:8080/api/agents/chat', {
-        question: input,
+        question: questionToSend,
         reportId: selectedReport._id
       });
 
+      let replyText = response.data.reply;
+
+      // Translate reply to user's selected language if needed
+      if (selectedLanguage !== 'en') {
+        try {
+          replyText = await translateText(replyText, selectedLanguage, 'medical');
+        } catch (err) {
+          console.warn('Reply translation failed, showing original:', err);
+        }
+      }
+
       const assistantMessage = {
         role: 'assistant',
-        content: response.data.reply,
-        timestamp: new Date().toISOString()
+        content: replyText,
+        timestamp: new Date().toISOString(),
+        language: selectedLanguage,
       };
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
@@ -70,27 +102,47 @@ const ReportChat = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white flex flex-col">
-      <header className="bg-slate-900/50 backdrop-blur-xl border-b border-slate-800 p-4 flex items-center justify-between">
+      <header className="bg-slate-900/50 backdrop-blur-xl border-b border-slate-800 p-4 flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center space-x-3">
           <FileText className="w-6 h-6 text-orange-400" />
           <h1 className="text-xl font-bold">Report Chat</h1>
         </div>
-        <div className="relative w-72">
-          <select
-            value={selectedReport ? selectedReport._id : ''}
-            onChange={(e) => {
-              const report = reports.find(r => r._id === e.target.value);
-              setSelectedReport(report);
-              setMessages([]);
-            }}
-            className="w-full px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all text-white appearance-none"
-          >
-            <option value="" disabled>Select a report to discuss</option>
-            {reports.map(report => (
-              <option key={report._id} value={report._id}>{report.filename}</option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+        
+        <div className="flex items-center gap-4 flex-1 min-w-fit justify-end">
+          {/* Language selector */}
+          <div className="flex items-center gap-2 bg-slate-800/50 px-3 py-2 rounded-lg border border-slate-700">
+            <Globe size={16} className="text-orange-400" />
+            <select
+              value={selectedLanguage}
+              onChange={(e) => setSelectedLanguage(e.target.value)}
+              className="bg-transparent text-white text-sm focus:outline-none"
+            >
+              {supportedLanguages.map((lang) => (
+                <option key={lang.code} value={lang.code}>
+                  {lang.nativeName}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Report selector */}
+          <div className="relative w-56">
+            <select
+              value={selectedReport ? selectedReport._id : ''}
+              onChange={(e) => {
+                const report = reports.find(r => r._id === e.target.value);
+                setSelectedReport(report);
+                setMessages([]);
+              }}
+              className="w-full px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all text-white appearance-none"
+            >
+              <option value="" disabled>Select a report to discuss</option>
+              {reports.map(report => (
+                <option key={report._id} value={report._id}>{report.filename}</option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+          </div>
         </div>
       </header>
 
@@ -112,10 +164,25 @@ const ReportChat = () => {
                 </div>
                 <div className={`px-3 py-2 rounded-xl ${msg.role === 'user' ? 'bg-slate-800/70 backdrop-blur-xl' : msg.role === 'error' ? 'bg-red-900/30 backdrop-blur-xl border border-red-500/30' : 'bg-slate-900/50 backdrop-blur-xl border border-slate-700/50'}`}>
                   <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{msg.content}</p>
+                  {msg.language && msg.language !== 'en' && (
+                    <p className="text-xs text-slate-400 mt-1 italic">({supportedLanguages.find(l => l.code === msg.language)?.nativeName || msg.language})</p>
+                  )}
                 </div>
               </div>
             </div>
           ))
+        )}
+        {translatingMessage && (
+          <div className="flex justify-start">
+            <div className="flex items-start space-x-2">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-700">
+                <Loader className="w-4 h-4 animate-spin" />
+              </div>
+              <div className="px-3 py-2 rounded-xl bg-slate-800/70 backdrop-blur-xl">
+                <p className="text-sm text-slate-400 italic">{translatingMessage}</p>
+              </div>
+            </div>
+          </div>
         )}
         <div ref={chatEndRef} />
       </main>

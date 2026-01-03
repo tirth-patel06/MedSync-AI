@@ -15,6 +15,9 @@ import agentsRoutes from "./routes/agentsRoutes.js";
 import calendarSyncRoutes from "./routes/calendarSyncRoutes.js";
 
 import reportRoutes from "./routes/reportRoutes.js";
+import translationRoutes from "./routes/translationRoutes.js";
+import languageRoutes from "./routes/languageRoutes.js";
+import preferencesRoutes from "./routes/preferencesRoutes.js";
 
 
 import oauthRoutes from "./routes/oauth.js";
@@ -67,6 +70,9 @@ app.use("/api/oauth", oauthRoutes);
 app.use("/api/calendar", calendarSyncRoutes);
 
 app.use("/api/report", reportRoutes);
+app.use("/api/translate", translationRoutes);
+app.use("/api/languages", languageRoutes);
+app.use("/api/preferences", preferencesRoutes);
 
 app.use("/api/analytics", analyticsRoutes);
 

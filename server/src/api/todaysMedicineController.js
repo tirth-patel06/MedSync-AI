@@ -1,4 +1,5 @@
 import Medication from "../models/medicineModel.js"; // your mongoose model
+import User from "../models/User.js";
 
 
 function getTimeForToday(timeStr) {
@@ -47,6 +48,18 @@ export  const todaysMedication= async(req,res)=>{
             const todayDay = today.toLocaleString("en-US", { weekday: "long" }); // e.g., "Monday"
             console.log("Today is:", todayDay);
         
+            // 🌐 Fetch user's preferred language
+            let userLanguage = 'en';
+            try {
+              const user = await User.findById(Id).select('preferredLanguage');
+              if (user && user.preferredLanguage) {
+                userLanguage = user.preferredLanguage;
+                console.log("🌐 User preferred language:", userLanguage);
+              }
+            } catch (userError) {
+              console.warn("⚠️ Could not fetch user language, defaulting to English:", userError);
+            }
+
             // Fetch medicines for the user and for today
            
              // Debug: ensure Id type
@@ -63,10 +76,27 @@ export  const todaysMedication= async(req,res)=>{
       const timeB = getTimeForToday(b.dosageTimes[0].time);
       return timeA - timeB;
     });
+
+    // 🌐 Localize instructions based on user language
+    const localizedMeds = todaysMeds.map(med => {
+      let instructions = med.originalInstructions || med.pillDescription || '';
+      
+      // Use translated version if available and user language is not English
+      if (userLanguage !== 'en' && med.translatedInstructions && med.translatedInstructions[userLanguage]) {
+        instructions = med.translatedInstructions[userLanguage];
+      }
+      
+      return {
+        ...med.toObject(),
+        displayInstructions: instructions,
+        userLanguage
+      };
+    });
+
      return res.status(201).json({
       success: true,
       message: "todays medicine fetched successfully",
-      data: todaysMeds
+      data: localizedMeds
     });
     }
     catch(error){

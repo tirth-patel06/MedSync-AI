@@ -36,6 +36,12 @@ const MedicationSchema = new mongoose.Schema({
   startDate: { type: Date, required: true },  // date of starting medication
   endDate: { type: Date },    // date of deletion of medication
 
+  originalInstructions: { type: String },
+  translatedInstructions: {
+    es: { type: String },
+    hi: { type: String }
+  },
+
   adherenceHistory: [AdherenceSchema],
 
 }, { timestamps: true });
