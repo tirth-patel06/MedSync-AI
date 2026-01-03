@@ -41,7 +41,7 @@ export const addMedication = async (req, res) => {
     await sampleMedicine.save();
 
     // Schedule in Google Calendar
-    let calendarSyncStatus = { success: false, message: "Sync not attempted" };
+    let calendarSyncStatus;
     try {
       calendarSyncStatus = await addMedicineToGoogleCalendar(localuser.id, sampleMedicine);
     } catch (calendarError) {

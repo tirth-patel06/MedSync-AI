@@ -6,7 +6,7 @@ import Medication from "../models/medicineModel.js";
 export const syncMedicationsToCalendar = async (req, res) => {
   try {
     const userId = req.user?.id;
-    console.log(`[Calendar Sync] Starting sync request for user:`, userId);
+    console.log(`[Calendar Sync] Starting sync request for user: ${userId}`);
     
     if (!userId) {
       console.warn(`[Calendar Sync] Missing authenticated user ID`);
@@ -85,7 +85,7 @@ export const syncMedicationsToCalendar = async (req, res) => {
       success: false,
       message: "Failed to sync medications to calendar",
       error: error.message,
-      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      details: process.env.NODE_ENV !== 'production' ? error.stack : undefined
     });
   }
 };

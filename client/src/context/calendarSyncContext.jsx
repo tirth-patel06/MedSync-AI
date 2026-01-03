@@ -50,7 +50,7 @@ export const CalendarSyncProvider = ({ children }) => {
         syncEnabled: false
       }));
     }
-  }, [localuser]);
+  }, []);
 
   // Sync medications to Google Calendar
   const syncToCalendar = useCallback(async () => {
@@ -91,7 +91,7 @@ export const CalendarSyncProvider = ({ children }) => {
       const errorMessage = error.response?.data?.message || error.message || 'Failed to sync calendar';
       throw new Error(errorMessage);
     }
-  }, [localuser]);
+  }, []);
 
   // Connect to Google Calendar (redirect to OAuth)
   const connectCalendar = useCallback(() => {
