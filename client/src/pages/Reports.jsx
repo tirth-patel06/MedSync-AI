@@ -1,10 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useLanguage } from "../hooks/useTranslation";
+import { Globe } from "lucide-react";
 
 const Reports = () => {
   const [period, setPeriod] = useState(30); // default 30 days
   const [loading, setLoading] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState(null);
   const [error, setError] = useState(null);
+  const [selectedLanguage, setSelectedLanguage] = useState("en");
+  const { language, supportedLanguages } = useLanguage();
+
+  useEffect(() => {
+    setSelectedLanguage(language);
+  }, [language]);
 
   const handleGenerateReport = async () => {
     setLoading(true);
@@ -12,7 +20,7 @@ const Reports = () => {
     setError(null);
 
     try {
-      const token = localStorage.getItem("token"); // auth token
+      const token = localStorage.getItem("token");
       const user = JSON.parse(localStorage.getItem("user"));
       const userId = user?.id || user?._id;
       const res = await fetch("http://localhost:8080/api/report", {
@@ -21,7 +29,11 @@ const Reports = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ periodInDays: period, userId }),
+        body: JSON.stringify({ 
+          periodInDays: period, 
+          userId,
+          language: selectedLanguage 
+        }),
       });
 
       const data = await res.json();
@@ -56,6 +68,24 @@ const Reports = () => {
           onChange={(e) => setPeriod(e.target.value)}
           className="w-full p-2 rounded-md bg-slate-800 border border-slate-700 text-gray-100 mb-4"
         />
+
+        <label className="block mb-2 text-slate-200 font-medium">
+          Report language:
+        </label>
+        <div className="flex items-center gap-2 mb-4">
+          <Globe size={18} className="text-orange-400" />
+          <select
+            value={selectedLanguage}
+            onChange={(e) => setSelectedLanguage(e.target.value)}
+            className="flex-1 p-2 rounded-md bg-slate-800 border border-slate-700 text-gray-100"
+          >
+            {supportedLanguages.map((lang) => (
+              <option key={lang.code} value={lang.code}>
+                {lang.nativeName} ({lang.name})
+              </option>
+            ))}
+          </select>
+        </div>
 
         <button
           onClick={handleGenerateReport}

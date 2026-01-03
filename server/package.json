@@ -32,6 +32,8 @@
     "node-notifier": "^10.0.1",
     "multer": "^2.0.2",
     "pdf-parse": "^1.1.1",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.1",
+    "node-cache": "^5.1.2",
+    "syllable": "^5.0.1"
   }
 }

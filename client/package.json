@@ -16,6 +16,7 @@
     "@tailwindcss/vite": "^4.1.14",
     "axios": "^1.12.2",
     "lucide-react": "^0.544.0",
+    "nodemailer": "^7.0.12",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.9.3",

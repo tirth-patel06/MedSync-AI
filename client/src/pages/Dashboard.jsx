@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { 
+import {
   Pill, Calendar, TrendingUp, Clock, CheckCircle, XCircle, AlertCircle,
   Flame, Sparkles, MessageSquare, Brain, Heart, Activity, FileText,
-  Settings, LogOut, Plus, ChevronRight, Bell, Menu, RefreshCw, CheckCircle2
+  Settings, LogOut, Plus, ChevronRight, Bell, Menu, RefreshCw, CheckCircle2,
+  Languages
 } from 'lucide-react';
 import { useMedicine } from '../context/medicationContext.jsx';
 import { useNotification } from '../context/notificationContext.jsx';
-
+import { useLanguage } from '../hooks/useTranslation.js';
 import { useCalendarSync } from '../context/calendarSyncContext.jsx';
 
 import Analytics from "./Analytics";
@@ -14,11 +15,13 @@ import Analytics from "./Analytics";
 
 export default function Dashboard() {
 
-  const{todayMedication,medicineStatus,getStreakDays}=useMedicine();
+  const { todayMedication, medicineStatus, getStreakDays } = useMedicine();
 
-  const{notifications,sendNotification,fetchTodayNotifications}=useNotification();
-  
+  const { notifications, sendNotification, fetchTodayNotifications } = useNotification();
+
   const { syncStatus, checkSyncStatus, syncToCalendar, connectCalendar } = useCalendarSync();
+
+  const { language: currentLanguage } = useLanguage();
 
   const [medications, setMedications] = useState([]);
   const [filteredMeds, setFilteredMeds] = useState([]);
@@ -31,11 +34,12 @@ export default function Dashboard() {
   const [syncToast, setSyncToast] = useState(null); // Toast notification state
 
   const [currentUser, setCurrentUser] = useState(null);
+  const [showOriginal, setShowOriginal] = useState({});
 
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    console.log("storedUser: ",storedUser);
+    console.log("storedUser: ", storedUser);
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
@@ -67,7 +71,7 @@ export default function Dashboard() {
       const data = await todayMedication();
       console.log('Fetched today\'s medications:', data);
       setMedications(Array.isArray(data) ? data : data?.data || []);
-      console.log("medications",medications)
+      console.log("medications", medications)
     } catch (error) {
       console.error('Error fetching medications:', error);
     } finally {
@@ -75,15 +79,15 @@ export default function Dashboard() {
     }
   };
 
-  
+
   const filterMedications = () => {
     if (activeFilter === 'all') {
       setFilteredMeds(medications);
     } else {
-      const filtered = medications.filter(med => 
+      const filtered = medications.filter(med =>
         med.dosageTimes.some(dt => dt.status === activeFilter)
       );
-      console.log("filtered medicine ",filtered)
+      console.log("filtered medicine ", filtered)
       setFilteredMeds(filtered);
     }
   };
@@ -98,7 +102,7 @@ export default function Dashboard() {
   };
 
   const getStatusColor = (status) => {
-    switch(status) {
+    switch (status) {
       case 'taken': return 'from-emerald-500 to-green-500';
       case 'missed': return 'from-red-500 to-rose-500';
       case 'delayed': return 'from-amber-500 to-orange-500';
@@ -107,7 +111,7 @@ export default function Dashboard() {
   };
 
   const getStatusIcon = (status) => {
-    switch(status) {
+    switch (status) {
       case 'taken': return <CheckCircle className="w-5 h-5" />;
       case 'missed': return <XCircle className="w-5 h-5" />;
       case 'delayed': return <AlertCircle className="w-5 h-5" />;
@@ -186,12 +190,12 @@ export default function Dashboard() {
   };
 
 
-  
+
   // Removed old calendar status logic - now using CalendarSyncContext
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
-      
+
       {/* Sidebar */}
       <aside className={`fixed top-0 left-0 h-full w-64 bg-slate-900/50 backdrop-blur-xl border-r border-slate-800 z-50 transform transition-transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
         <div className="p-6 space-y-8">
@@ -225,19 +229,19 @@ export default function Dashboard() {
               <Settings className="w-5 h-5" />
               <span>Health Profile</span>
             </button>
-            
+
             {/* Calendar Sync Section */}
             <div className="pt-4 border-t border-slate-700">
               <p className="text-slate-500 text-xs font-medium mb-2 px-4">CALENDAR SYNC</p>
-              
+
               {syncStatus.isLinked ? (
                 <div className="space-y-2">
                   <div className="px-4 py-2 text-emerald-400 text-sm flex items-center space-x-2">
                     <CheckCircle2 className="w-4 h-4" />
                     <span>Google Calendar Connected</span>
                   </div>
-                  
-                  <button 
+
+                  <button
                     onClick={handleSyncCalendar}
                     disabled={syncStatus.isSyncing}
                     className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500/20 to-green-500/20 border border-emerald-500/30 text-emerald-400 hover:from-emerald-500/30 hover:to-green-500/30 transition-all disabled:opacity-50"
@@ -245,7 +249,7 @@ export default function Dashboard() {
                     <RefreshCw className={`w-5 h-5 ${syncStatus.isSyncing ? 'animate-spin' : ''}`} />
                     <span>{syncStatus.isSyncing ? 'Syncing...' : 'Sync Medications'}</span>
                   </button>
-                  
+
                   {syncStatus.lastSync && (
                     <p className="text-slate-500 text-xs px-4">
                       Last sync: {new Date(syncStatus.lastSync).toLocaleDateString()}
@@ -253,8 +257,8 @@ export default function Dashboard() {
                   )}
                 </div>
               ) : (
-                <button 
-                  onClick={handleConnectCalendar} 
+                <button
+                  onClick={handleConnectCalendar}
                   className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-slate-800/50 text-slate-400 hover:text-white transition-all"
                 >
                   <Calendar className="w-5 h-5" />
@@ -275,7 +279,7 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <div className="lg:ml-64 p-6 space-y-6">
-        
+
         {/* Header */}
         <header className="flex justify-between items-center">
           <div className="flex items-center space-x-4">
@@ -349,37 +353,37 @@ export default function Dashboard() {
 
         {/* Main Grid */}
         <div className="grid lg:grid-cols-3 gap-6">
-          
+
           {/* Today's Medications */}
           <div className="lg:col-span-2 space-y-6">
-            
+
             {/* Filter Tabs */}
             <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl p-2 border border-slate-800 flex space-x-2 overflow-x-auto">
-              <button 
+              <button
                 onClick={() => setActiveFilter('all')}
                 className={`px-6 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${activeFilter === 'all' ? 'bg-gradient-to-r from-orange-500 to-rose-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
               >
                 All ({stats.total})
               </button>
-              <button 
+              <button
                 onClick={() => setActiveFilter('taken')}
                 className={`px-6 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${activeFilter === 'taken' ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
               >
                 Taken ({stats.taken})
               </button>
-              <button 
+              <button
                 onClick={() => setActiveFilter('pending')}
                 className={`px-6 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${activeFilter === 'pending' ? 'bg-gradient-to-r from-slate-600 to-slate-700 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
               >
                 Pending ({stats.pending})
               </button>
-              <button 
+              <button
                 onClick={() => setActiveFilter('delayed')}
                 className={`px-6 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${activeFilter === 'delayed' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
               >
                 Delayed ({stats.delayed})
               </button>
-              <button 
+              <button
                 onClick={() => setActiveFilter('missed')}
                 className={`px-6 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${activeFilter === 'missed' ? 'bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
               >
@@ -399,41 +403,69 @@ export default function Dashboard() {
                   <p className="text-slate-400">No medications to show</p>
                 </div>
               ) : (
-                (Array.isArray(filteredMeds) ? filteredMeds : []).map((med, idx) => (
-                  <div key={idx} className="bg-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-800 hover:border-orange-500/50 transition-all">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center space-x-4">
-                        <div className={`w-14 h-14 bg-gradient-to-br ${getStatusColor(med.dosageTimes[0]?.status)} rounded-xl flex items-center justify-center shadow-lg`}>
-                          {getStatusIcon(med.dosageTimes[0]?.status)}
+                (Array.isArray(filteredMeds) ? filteredMeds : []).map((med, idx) => {
+                  // Determine which instructions to display
+                  const isTranslated = med.userLanguage && med.userLanguage !== 'en';
+                  const displayInstructions = showOriginal[med._id]
+                    ? (med.originalInstructions || med.pillDescription)
+                    : (med.displayInstructions || med.pillDescription);
+
+                  return (
+                    <div key={idx} className="bg-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-800 hover:border-orange-500/50 transition-all">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center space-x-4">
+                          <div className={`w-14 h-14 bg-gradient-to-br ${getStatusColor(med.dosageTimes[0]?.status)} rounded-xl flex items-center justify-center shadow-lg`}>
+                            {getStatusIcon(med.dosageTimes[0]?.status)}
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-bold">{med.pillName}</h3>
+                            <p className="text-slate-400 text-sm">{med.dosageAmount} • {med.frequency}</p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="text-xl font-bold">{med.pillName}</h3>
-                          <p className="text-slate-400 text-sm">{med.dosageAmount} • {med.frequency}</p>
-                        </div>
+                        <button
+                          onClick={() => handleStatusToggle(med._id)}
+                          className="px-4 py-2 bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 rounded-lg text-sm font-medium transition-all shadow-lg"
+                        >
+                          Mark Taken
+                        </button>
                       </div>
-                      <button 
-                        onClick={() => handleStatusToggle(med._id)}
-                        className="px-4 py-2 bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 rounded-lg text-sm font-medium transition-all shadow-lg"
-                      >
-                        Mark Taken
-                      </button>
-                    </div>
 
-                    {med.pillDescription && (
-                      <p className="text-slate-400 text-sm mb-4">{med.pillDescription}</p>
-                    )}
-
-                    <div className="flex flex-wrap gap-2">
-                      {med.dosageTimes.map((dt, i) => (
-                        <div key={i} className={`px-3 py-1 rounded-lg bg-gradient-to-r ${getStatusColor(dt.status)}/20 border ${dt.status === 'taken' ? 'border-emerald-500/30' : dt.status === 'missed' ? 'border-red-500/30' : dt.status === 'delayed' ? 'border-amber-500/30' : 'border-slate-500/30'} flex items-center space-x-2`}>
-                          <Clock className="w-4 h-4" />
-                          <span className="text-sm">{dt.time}</span>
-                          <span className="text-xs opacity-75 capitalize">({dt.status})</span>
+                      {displayInstructions && (
+                        <div className="mb-4">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="text-slate-400 text-sm flex-1">{displayInstructions}</p>
+                            {isTranslated && (
+                              <button
+                                onClick={() => setShowOriginal(prev => ({ ...prev, [med._id]: !prev[med._id] }))}
+                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 text-xs transition-all"
+                                title={showOriginal[med._id] ? "Show translated version" : "Show original English"}
+                              >
+                                <Languages className="w-3 h-3" />
+                                {showOriginal[med._id] ? 'EN' : currentLanguage.toUpperCase()}
+                              </button>
+                            )}
+                          </div>
+                          {isTranslated && !showOriginal[med._id] && (
+                            <p className="text-cyan-400/60 text-xs mt-1 flex items-center gap-1">
+                              <Languages className="w-3 h-3" />
+                              Translated from English
+                            </p>
+                          )}
                         </div>
-                      ))}
+                      )}
+
+                      <div className="flex flex-wrap gap-2">
+                        {med.dosageTimes.map((dt, i) => (
+                          <div key={i} className={`px-3 py-1 rounded-lg bg-gradient-to-r ${getStatusColor(dt.status)}/20 border ${dt.status === 'taken' ? 'border-emerald-500/30' : dt.status === 'missed' ? 'border-red-500/30' : dt.status === 'delayed' ? 'border-amber-500/30' : 'border-slate-500/30'} flex items-center space-x-2`}>
+                            <Clock className="w-4 h-4" />
+                            <span className="text-sm">{dt.time}</span>
+                            <span className="text-xs opacity-75 capitalize">({dt.status})</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))
+                  )
+                })
               )}
             </div>
 
@@ -446,7 +478,7 @@ export default function Dashboard() {
 
           {/* Right Sidebar */}
           <div className="space-y-6">
-            
+
             {/* AI Assistant */}
             <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-800">
               <div className="flex items-center space-x-3 mb-6">
@@ -461,7 +493,7 @@ export default function Dashboard() {
 
               <div className="grid grid-cols-2 gap-3">
                 {aiAgents.map((agent, idx) => (
-                  <button 
+                  <button
                     key={idx}
                     onClick={() => window.location.href = '/agents'}
                     className="bg-slate-800/50 hover:bg-slate-800 rounded-xl p-4 border border-slate-700 hover:border-orange-500/50 transition-all group text-left"
