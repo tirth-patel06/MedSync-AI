@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { GoogleLogin } from '@react-oauth/google';
 import OTPInput from "../components/OTPInput";
 
 export default function Signup() {
@@ -99,6 +100,26 @@ export default function Signup() {
     }
   };
 
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const res = await fetch("http://localhost:8080/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ credential: credentialResponse.credential })
+      });
+      const data = await res.json();
+      if (res.ok && data.token) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        navigate("/dashboard");
+      } else {
+        setError(data.message || "Google Login failed");
+      }
+    } catch (err) {
+      setError("An error occurred during Google Login");
+    }
+  };
+
   return (
     <div className="flex items-center justify-center h-screen bg-gray-900 text-white p-4">
       <div className="bg-gray-800 p-8 rounded-2xl w-full max-w-md shadow-2xl border border-gray-700">
@@ -147,6 +168,23 @@ export default function Signup() {
             >
               {loading ? "Creating Account..." : "Sign Up"}
             </button>
+
+            <div className="mt-6 flex flex-col items-center">
+              <div className="w-full flex items-center mb-6">
+                <div className="flex-1 h-px bg-gray-700"></div>
+                <span className="px-3 text-sm text-gray-500 font-medium">OR</span>
+                <div className="flex-1 h-px bg-gray-700"></div>
+              </div>
+              
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => setError("Google Signup Failed")}
+                theme="filled_blue"
+                shape="pill"
+                text="signup_with"
+                width="100%"
+              />
+            </div>
             <p className="mt-6 text-center text-sm text-gray-400">
               Already have an account? <a href="/login" className="text-blue-400 hover:underline">Login</a>
             </p>
