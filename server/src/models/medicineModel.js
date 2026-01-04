@@ -5,7 +5,8 @@ const DosageTimeSchema = new mongoose.Schema({
   remindBefore: { type: String, default: "15m" }, 
   remindAfter: { type: String, default: "30m" },
   status: { type: String, enum: ["pending", "taken", "missed", "delayed"], default: "pending" },
-  takenAt: { type: Date, default: null }
+  takenAt: { type: Date, default: null },
+  lastReminderSentAt: { type: Date, default: null }
 });
 
 

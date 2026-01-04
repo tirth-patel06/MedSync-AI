@@ -29,11 +29,12 @@
     "langchain": "^0.3.35",
     "mongodb": "^6.20.0",
     "mongoose": "^8.19.0",
-    "node-notifier": "^10.0.1",
     "multer": "^2.0.2",
+    "node-cache": "^5.1.2",
+    "node-notifier": "^10.0.1",
+    "nodemailer": "^7.0.12",
     "pdf-parse": "^1.1.1",
     "socket.io": "^4.8.1",
-    "node-cache": "^5.1.2",
     "syllable": "^5.0.1"
   }
 }
