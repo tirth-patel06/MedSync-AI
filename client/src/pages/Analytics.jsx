@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+
 import {
   PieChart,
   Pie,
@@ -13,11 +16,11 @@ import {
 } from "recharts";
 
 const COLORS = ["#22c55e", "#ef4444", "#f59e0b", "#3b82f6"];
-const ZERO_COLOR = "#64748b"; // muted color for zero values
+const ZERO_COLOR = "#64748b"; // muted color for zero values 
 
 const Analytics = ({ userId }) => {
   const [data, setData] = useState(null);
-
+  const navigate = useNavigate();
   useEffect(() => {
     let uid = userId;
     if (!uid) {
@@ -63,10 +66,33 @@ const Analytics = ({ userId }) => {
   }));
 
   return (
-    <div className="min-h-screen p-8 bg-slate-950 text-gray-100">
-      <h2 className="text-3xl font-extrabold text-center text-orange-400 drop-shadow-md mb-10">
-        📊 Medication Analytics
-      </h2>
+    
+   <div className="min-h-screen bg-slate-950 text-gray-100">
+  <div className="max-w-6xl mx-auto px-6 py-8">
+
+
+  {/* Header with back navigation */}
+      <header className="flex items-center justify-between mb-10">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => navigate("/dashboard")}
+            className="p-3 hover:bg-slate-800/50 rounded-xl transition-all group"
+            aria-label="Back to dashboard"
+          >
+            <ArrowLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
+          </button>
+
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-rose-400 bg-clip-text text-transparent">
+              Medication Analytics
+            </h1>
+            <p className="text-slate-400">
+              View adherence and medication trends
+            </p>
+          </div>
+        </div>
+      </header>
+
 
       <div className="flex flex-row flex-wrap gap-10 justify-center items-start">
         {/* Pie Chart */}
@@ -165,6 +191,7 @@ const Analytics = ({ userId }) => {
           </ResponsiveContainer>
         </div>
       </div>
+    </div>
     </div>
   );
 };
