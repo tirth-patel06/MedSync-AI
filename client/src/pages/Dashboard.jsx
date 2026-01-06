@@ -168,16 +168,16 @@ export default function Dashboard() {
   // Removed old calendar status logic - now using CalendarSyncContext
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
+    <div className="min-h-screen bg-linear-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
       
       {/* Sidebar */}
       <aside className={`fixed top-0 left-0 h-full w-64 bg-slate-900/50 backdrop-blur-xl border-r border-slate-800 z-50 transform transition-transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
         <div className="p-6 space-y-8">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-rose-500 rounded-xl flex items-center justify-center shadow-lg">
+            <div className="w-10 h-10 bg-linear-to-br from-orange-500 to-rose-500 rounded-xl flex items-center justify-center shadow-lg">
               <Pill className="w-6 h-6" />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-orange-400 to-rose-400 bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-linear-to-r from-orange-400 to-rose-400 bg-clip-text text-transparent">
               INSIGHT-X
             </span>
           </div>
