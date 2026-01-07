@@ -373,43 +373,19 @@ const scheduleReminders = new Set();
 export default async function startNotificationScheduler(user) {
   console.log("📅 Starting daily medication notification scheduler...");
   let userId;
-if (user?.user?.id) {
-  // if called from login (wrapped object)
-  userId = user.user.id.toString();
-} else if (user?._id) {
-  // if called from signup (Mongoose document)
-  userId = user._id.toString();
-} else {
-  console.error("Invalid user object passed to scheduler:", user);
-  return; // exit if user is invalid
-}
-const reminderKey = getReminderKey(userId, med._id, dose.time);
-if(scheduleReminders.has(reminderKey)) {
-  return; // Skip scheduling if already scheduled
-}
-const scheduledTimeDate = new Date(beforeMs);
-if (dose.lastReminderSentAt && 
-    dose.lastReminderSentAt >= scheduledTimeDate) {
-  console.log(`⏭️ Reminder already sent at ${dose.lastReminderSentAt}`);
-  return;
-}
-
-
-scheduleReminders.add(reminderKey);
-setTimeout(async () => {
-  // Send notification...
-  sendNotification(title, message, userId, "before");
   
-  // 🆕 Mark as sent in database
-  await Medication.updateOne(
-    { _id: med._id, "dosageTimes.time": dose.time },
-    { $set: { "dosageTimes.$.lastReminderSentAt": new Date() } }
-  );
+  if (user?.user?.id) {
+    // if called from login (wrapped object)
+    userId = user.user.id.toString();
+  } else if (user?._id) {
+    // if called from signup (Mongoose document)
+    userId = user._id.toString();
+  } else {
+    console.error("Invalid user object passed to scheduler:", user);
+    return; // exit if user is invalid
+  }
   
-  console.log(`✅ Reminder sent and logged for ${med.pillName}`);
-}, beforeMs - Date.now());
-
-console.log("User id:", userId);
+  console.log("User id:", userId);
 
   // 🧹 Clear any existing timers for this user to prevent duplicates
   clearUserTimers(userId);
