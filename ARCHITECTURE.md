@@ -8,7 +8,7 @@ This document provides a comprehensive overview of the MedSync AI system archite
 
 ## 📊 Architecture Diagram
 
-![MedSync AI System Architecture](./Architecture.png)
+![MedSync AI System Architecture](./MedSync-Architecture.png)
 
 The architecture diagram above illustrates the complete system architecture of MedSync AI, showing the flow between:
 
