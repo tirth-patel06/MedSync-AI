@@ -57,8 +57,6 @@ export default function Dashboard() {
     }
   }, []);
 
-
-
   useEffect(() => {
     fetchTodayMedications();
     getStreakDays().then(setStreak);
@@ -107,6 +105,15 @@ export default function Dashboard() {
       setProcessingMeds(prev => ({ ...prev, [medId]: false }));
     }
   };
+ const handleStatusChange = async (medId, status) => {
+  try {
+    await medicineStatus(medId, status);
+    await fetchTodayMedications();
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -285,7 +292,7 @@ export default function Dashboard() {
       </aside>
 
       {/* Main Content */}
-      <div className="lg:ml-64 p-6 space-y-6">
+      <div className="lg:ml-64 px-4 sm:px-6 py-6 space-y-6 overflow-x-hidden">
 
         {/* Header */}
         <header className="flex justify-between items-center">
@@ -359,40 +366,40 @@ export default function Dashboard() {
         )}
 
         {/* Main Grid */}
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
           {/* Today's Medications */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="col-span-1 lg:col-span-2 space-y-6 w-full">
 
             {/* Filter Tabs */}
             <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl p-2 border border-slate-800 flex space-x-2 overflow-x-auto">
               <button
                 onClick={() => setActiveFilter('all')}
-                className={`px-6 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${activeFilter === 'all' ? 'bg-gradient-to-r from-orange-500 to-rose-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+                className={`px-3 sm:px-6 py-2 sm:py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${activeFilter === 'all' ? 'bg-gradient-to-r from-orange-500 to-rose-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
               >
                 All ({stats.total})
               </button>
               <button
                 onClick={() => setActiveFilter('taken')}
-                className={`px-6 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${activeFilter === 'taken' ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+                className={`px-3 sm:px-6 py-2 sm:py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${activeFilter === 'taken' ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
               >
                 Taken ({stats.taken})
               </button>
               <button
                 onClick={() => setActiveFilter('pending')}
-                className={`px-6 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${activeFilter === 'pending' ? 'bg-gradient-to-r from-slate-600 to-slate-700 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+                className={`px-3 sm:px-6 py-2 sm:py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${activeFilter === 'pending' ? 'bg-gradient-to-r from-slate-600 to-slate-700 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
               >
                 Pending ({stats.pending})
               </button>
               <button
                 onClick={() => setActiveFilter('delayed')}
-                className={`px-6 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${activeFilter === 'delayed' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+                className={`px-3 sm:px-6 py-2 sm:py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${activeFilter === 'delayed' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
               >
                 Delayed ({stats.delayed})
               </button>
               <button
                 onClick={() => setActiveFilter('missed')}
-                className={`px-6 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${activeFilter === 'missed' ? 'bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+                className={`px-3 sm:px-6 py-2 sm:py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${activeFilter === 'missed' ? 'bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
               >
                 Missed ({stats.missed})
               </button>
@@ -405,7 +412,7 @@ export default function Dashboard() {
                   <Loader size="lg" color="orange" />
                 </div>
               ) : filteredMeds.length === 0 ? (
-                <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl p-12 border border-slate-800 text-center">
+                  <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl p-6 sm:p-12 border border-slate-800 text-center">
                   <Sparkles className="w-16 h-16 text-slate-600 mx-auto mb-4" />
                   <p className="text-slate-400">No medications to show</p>
                 </div>
@@ -418,7 +425,7 @@ export default function Dashboard() {
                     : (med.displayInstructions || med.pillDescription);
 
                   return (
-                    <div key={idx} className="bg-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-800 hover:border-orange-500/50 transition-all">
+                    <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl p-2 border border-slate-800 flex flex-wrap gap-2 overflow-x-hidden">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center space-x-4">
                           <div className={`w-14 h-14 bg-gradient-to-br ${getStatusColor(med.dosageTimes[0]?.status)} rounded-xl flex items-center justify-center shadow-lg`}>
@@ -489,7 +496,7 @@ export default function Dashboard() {
           </div>
 
           {/* Right Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-6 w-full">
 
             {/* AI Assistant */}
             <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-800">
