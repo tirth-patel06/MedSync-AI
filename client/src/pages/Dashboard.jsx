@@ -13,6 +13,9 @@ import { useCalendarSync } from '../context/calendarSyncContext.jsx';
 import Analytics from "./Analytics";
 
 
+import Loader from '../components/Loader';
+import Button from '../components/Button';
+
 export default function Dashboard() {
 
   const { todayMedication, medicineStatus, getStreakDays } = useMedicine();
@@ -27,6 +30,7 @@ export default function Dashboard() {
   const [filteredMeds, setFilteredMeds] = useState([]);
   const [activeFilter, setActiveFilter] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [processingMeds, setProcessingMeds] = useState({}); // Track loading state for each med action
   const [streak, setStreak] = useState(12);  //  will add it for afterwards(streak = number of days for 100% adherence)
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [linked, setLinked] = useState(false);
@@ -90,6 +94,17 @@ export default function Dashboard() {
     }
   };
 
+  const handleStatusToggle = async (medId) => {
+    setProcessingMeds(prev => ({ ...prev, [medId]: true }));
+    try {
+      await medicineStatus(medId);
+      await fetchTodayMedications();
+    } catch (error) {
+      console.error('Error updating status:', error);
+    } finally {
+      setProcessingMeds(prev => ({ ...prev, [medId]: false }));
+    }
+  };
  const handleStatusChange = async (medId, status) => {
   try {
     await medicineStatus(medId, status);
@@ -158,21 +173,21 @@ export default function Dashboard() {
   const handleSyncCalendar = async () => {
     console.log("[Dashboard] Sync button clicked");
     setSyncToast({ type: 'loading', message: 'Syncing medications to Google Calendar...' });
-    
+
     try {
       console.log("[Dashboard] Starting sync...");
       const result = await syncToCalendar();
       console.log(`[Dashboard] Sync successful:`, result);
-      
+
       setSyncToast({
         type: 'success',
         message: `Success! Synced ${result.syncedEvents} medication events to Google Calendar.`,
         details: `${result.syncedMedications} medications processed`
       });
-      
+
       // Auto-hide success toast after 5 seconds
       setTimeout(() => setSyncToast(null), 5000);
-      
+
       // Refresh sync status
       await checkSyncStatus();
     } catch (error) {
@@ -182,7 +197,7 @@ export default function Dashboard() {
         message: `Sync failed: ${error.message || 'Unknown error'}`,
         details: 'Check your Google Calendar connection and try again.'
       });
-      
+
       // Auto-hide error toast after 7 seconds
       setTimeout(() => setSyncToast(null), 7000);
     }
@@ -394,7 +409,7 @@ export default function Dashboard() {
             <div className="space-y-4">
               {loading ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent"></div>
+                  <Loader size="lg" color="orange" />
                 </div>
               ) : filteredMeds.length === 0 ? (
                   <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl p-6 sm:p-12 border border-slate-800 text-center">
@@ -421,72 +436,41 @@ export default function Dashboard() {
                             <p className="text-slate-400 text-sm">{med.dosageAmount} • {med.frequency}</p>
                           </div>
                         </div>
-                        <div className="flex gap-2">
-                          </div>
-  <div className="flex gap-2">
-  <button
-    onClick={() => handleStatusChange(med._id, 'taken')}
-    disabled={isStatusSet}
-    className={`px-3 py-1 rounded text-sm transition-all
-      ${isStatusSet
-        ? 'bg-gray-500 opacity-50 cursor-not-allowed'
-        : 'bg-emerald-600 hover:bg-emerald-700 hover:scale-105'}
-    `}
-  >
-    Taken
-  </button>
-
-  <button
-    onClick={() => handleStatusChange(med._id, 'missed')}
-    disabled={isStatusSet}
-    className={`px-3 py-1 rounded text-sm transition-all
-      ${isStatusSet
-        ? 'bg-gray-500 opacity-50 cursor-not-allowed'
-        : 'bg-red-600 hover:bg-red-700 hover:scale-105'}
-    `}
-  >
-    Missed
-  </button>
-
-  <button
-    onClick={() => handleStatusChange(med._id, 'delayed')}
-    disabled={isStatusSet}
-    className={`px-3 py-1 rounded text-sm transition-all
-      ${isStatusSet
-        ? 'bg-gray-500 opacity-50 cursor-not-allowed'
-        : 'bg-amber-600 hover:bg-amber-700 hover:scale-105'}
-    `}
-  >
-    Delayed
-  </button>
-</div>
-
-
+                        <Button
+                          onClick={() => handleStatusToggle(med._id)}
+                          isLoading={processingMeds[med._id]}
+                          variant="primary"
+                          className="px-4 py-2 text-sm shadow-lg"
+                        >
+                          Mark Taken
+                        </Button>
                       </div>
 
-                      {displayInstructions && (
-                        <div className="mb-4">
-                          <div className="flex items-start justify-between gap-2">
-                            <p className="text-slate-400 text-sm flex-1">{displayInstructions}</p>
-                            {isTranslated && (
-                              <button
-                                onClick={() => setShowOriginal(prev => ({ ...prev, [med._id]: !prev[med._id] }))}
-                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 text-xs transition-all"
-                                title={showOriginal[med._id] ? "Show translated version" : "Show original English"}
-                              >
+                      {
+                        displayInstructions && (
+                          <div className="mb-4">
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="text-slate-400 text-sm flex-1">{displayInstructions}</p>
+                              {isTranslated && (
+                                <button
+                                  onClick={() => setShowOriginal(prev => ({ ...prev, [med._id]: !prev[med._id] }))}
+                                  className="flex items-center gap-1 px-2 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 text-xs transition-all"
+                                  title={showOriginal[med._id] ? "Show translated version" : "Show original English"}
+                                >
+                                  <Languages className="w-3 h-3" />
+                                  {showOriginal[med._id] ? 'EN' : currentLanguage.toUpperCase()}
+                                </button>
+                              )}
+                            </div>
+                            {isTranslated && !showOriginal[med._id] && (
+                              <p className="text-cyan-400/60 text-xs mt-1 flex items-center gap-1">
                                 <Languages className="w-3 h-3" />
-                                {showOriginal[med._id] ? 'EN' : currentLanguage.toUpperCase()}
-                              </button>
+                                Translated from English
+                              </p>
                             )}
                           </div>
-                          {isTranslated && !showOriginal[med._id] && (
-                            <p className="text-cyan-400/60 text-xs mt-1 flex items-center gap-1">
-                              <Languages className="w-3 h-3" />
-                              Translated from English
-                            </p>
-                          )}
-                        </div>
-                      )}
+                        )
+                      }
 
                       <div className="flex flex-wrap gap-2">
                         {med.dosageTimes.map((dt, i) => (
@@ -592,43 +576,44 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {syncToast && (
-        <div className={`fixed bottom-6 right-6 max-w-sm rounded-2xl p-4 backdrop-blur-xl border shadow-2xl animate-slideIn z-40 ${
-          syncToast.type === 'success' 
-            ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-100' 
+      {
+        syncToast && (
+          <div className={`fixed bottom-6 right-6 max-w-sm rounded-2xl p-4 backdrop-blur-xl border shadow-2xl animate-slideIn z-40 ${syncToast.type === 'success'
+            ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-100'
             : syncToast.type === 'error'
-            ? 'bg-red-500/20 border-red-500/50 text-red-100'
-            : 'bg-blue-500/20 border-blue-500/50 text-blue-100'
-        }`}>
-          <div className="flex items-start space-x-3">
-            <div className="flex-shrink-0 mt-0.5">
-              {syncToast.type === 'loading' && (
-                <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-400 border-t-transparent"></div>
-              )}
-              {syncToast.type === 'success' && (
-                <CheckCircle className="w-5 h-5 text-emerald-400" />
-              )}
-              {syncToast.type === 'error' && (
-                <AlertCircle className="w-5 h-5 text-red-400" />
+              ? 'bg-red-500/20 border-red-500/50 text-red-100'
+              : 'bg-blue-500/20 border-blue-500/50 text-blue-100'
+            }`}>
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0 mt-0.5">
+                {syncToast.type === 'loading' && (
+                  <Loader size="sm" color="blue" />
+                )}
+                {syncToast.type === 'success' && (
+                  <CheckCircle className="w-5 h-5 text-emerald-400" />
+                )}
+                {syncToast.type === 'error' && (
+                  <AlertCircle className="w-5 h-5 text-red-400" />
+                )}
+              </div>
+              <div className="flex-1">
+                <p className="font-medium">{syncToast.message}</p>
+                {syncToast.details && (
+                  <p className="text-sm opacity-75 mt-1">{syncToast.details}</p>
+                )}
+              </div>
+              {syncToast.type !== 'loading' && (
+                <button
+                  onClick={() => setSyncToast(null)}
+                  className="flex-shrink-0 opacity-75 hover:opacity-100 transition"
+                >
+                  ✕
+                </button>
               )}
             </div>
-            <div className="flex-1">
-              <p className="font-medium">{syncToast.message}</p>
-              {syncToast.details && (
-                <p className="text-sm opacity-75 mt-1">{syncToast.details}</p>
-              )}
-            </div>
-            {syncToast.type !== 'loading' && (
-              <button 
-                onClick={() => setSyncToast(null)}
-                className="flex-shrink-0 opacity-75 hover:opacity-100 transition"
-              >
-                ✕
-              </button>
-            )}
           </div>
-        </div>
-      )}
+        )
+      }
     </div>
   );
 }
