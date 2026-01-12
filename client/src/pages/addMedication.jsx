@@ -7,6 +7,7 @@ import { useMedicine } from '../context/medicationContext';
 import { useNotification } from '../context/notificationContext';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../hooks/useTranslation.js';
+import BulkMedicineInput from '../components/BulkMedicineInput';
 
 
 
@@ -23,9 +24,14 @@ export default function MedicationEntryForm() {
   });
   const [showJson, setShowJson] = useState(false);
   const [translationPreviews, setTranslationPreviews] = useState({});
-  const [isTranslating, setIsTranslating] = useState(false);  const weekDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); 
+  const weekDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   const reminderOptions = ["5m", "10m", "15m", "30m", "1h"];
-
+  const [mode, setMode] = useState(() => localStorage.getItem("medMode") || "single");
+  useEffect(() => {
+    localStorage.setItem("medMode", mode);
+  }, [mode]);
   // 🌐 Debounced translation preview
   useEffect(() => {
     if (!medication.pillDescription || medication.pillDescription.trim().length === 0) {
@@ -155,6 +161,32 @@ export default function MedicationEntryForm() {
               <p className="text-slate-400">Create a new medication schedule</p>
             </div>
           </div>
+
+          {/* Mode Toggle */}
+          <div className="flex gap-2 mb-6">
+            <button
+              onClick={() => setMode("single")}
+              className={`px-4 py-2 rounded-lg font-semibold transition ${
+                mode === "single"
+                  ? "bg-gradient-to-r from-orange-500 to-rose-500 text-white"
+                  : "bg-slate-800 text-slate-400 hover:text-white"
+              }`}
+            >
+              Single Entry
+            </button>
+
+            <button
+              onClick={() => setMode("bulk")}
+              className={`px-4 py-2 rounded-lg font-semibold transition ${
+                mode === "bulk"
+                  ? "bg-gradient-to-r from-orange-500 to-rose-500 text-white"
+                  : "bg-slate-800 text-slate-400 hover:text-white"
+              }`}
+            >
+              Bulk Add (AI)
+            </button>
+          </div>
+
           
           <div className="flex items-center space-x-3">
             <div className="w-12 h-12 bg-gradient-to-br from-orange-500/20 to-rose-500/20 rounded-xl flex items-center justify-center">
@@ -164,6 +196,7 @@ export default function MedicationEntryForm() {
         </header>
 
         {/* Main Form Card */}
+        {mode === "single" && (
         <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl p-8 border border-slate-800 space-y-8">
           
         
@@ -382,12 +415,18 @@ export default function MedicationEntryForm() {
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 pt-4">
-            <button 
-              onClick={handleSubmit} 
-              className="flex-1 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-lg rounded-lg flex items-center justify-center gap-2 hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg shadow-green-500/50"
-            >
-              <Check size={24} /> Create Medication Entry
-            </button>
+            <button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className={`flex-1 py-4 font-bold text-lg rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg ${
+              isSubmitting
+                ? "bg-gray-600 cursor-not-allowed"
+                : "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-green-500/50"
+            }`}
+          >
+            <Check size={24} />
+            {isSubmitting ? "Submitting..." : "Create Medication Entry"}
+          </button>
             <button 
               onClick={resetForm} 
               className="px-8 py-4 bg-gray-700 bg-opacity-50 text-purple-200 font-semibold rounded-lg hover:bg-opacity-70 transition"
@@ -396,6 +435,14 @@ export default function MedicationEntryForm() {
             </button>
           </div>
         </div>
+        )}
+
+        {mode === "bulk" && (
+          <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl p-8 border border-slate-800">
+            <BulkMedicineInput />
+          </div>
+        )}
+
 
         {/* JSON Preview */}
         {showJson && (
