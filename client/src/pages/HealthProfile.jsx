@@ -83,13 +83,53 @@ function HealthProfile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const payload = {
-      ...form,
-      emergencyContact: {
-        name: form.emergencyContactName || "",
-        phone: form.emergencyContactPhone || "",
-      },
+    
+    // Helper function to clean array fields
+    const cleanArrayField = (field) => {
+      if (!field) return [];
+      if (Array.isArray(field)) {
+        return field.map(item => item.trim()).filter(item => item.length > 0);
+      }
+      return [];
     };
+
+    // Build clean payload with only defined fields
+    const payload = {};
+    
+    // Add basic fields if they exist
+    if (form.age) payload.age = Number(form.age);
+    if (form.gender) payload.gender = form.gender.trim();
+    if (form.height) payload.height = Number(form.height);
+    if (form.weight) payload.weight = Number(form.weight);
+    if (form.bloodGroup) payload.bloodGroup = form.bloodGroup.trim();
+    if (form.lastCheckup) payload.lastCheckup = form.lastCheckup;
+    
+    // Clean and add array fields
+    const medicalConditions = cleanArrayField(form.medicalConditions);
+    if (medicalConditions.length > 0) {
+      payload.medicalConditions = medicalConditions;
+    }
+    
+    const allergies = cleanArrayField(form.allergies);
+    if (allergies.length > 0) {
+      payload.allergies = allergies;
+    }
+    
+    const medications = cleanArrayField(form.medications);
+    if (medications.length > 0) {
+      payload.medications = medications;
+    }
+    
+    // Add emergency contact if both name and phone are provided
+    const emergencyName = form.emergencyContactName?.trim();
+    const emergencyPhone = form.emergencyContactPhone?.trim();
+    
+    if (emergencyName || emergencyPhone) {
+      payload.emergencyContact = {
+        name: emergencyName || "",
+        phone: emergencyPhone || "",
+      };
+    }
 
     try {
       const res = await fetch("http://localhost:8080/api/health", {
@@ -100,6 +140,11 @@ function HealthProfile() {
         },
         body: JSON.stringify(payload),
       });
+      
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      
       const data = await res.json();
       if (data.profile) {
         setProfile(data.profile);
@@ -111,7 +156,8 @@ function HealthProfile() {
         setEditMode(false);
       }
     } catch (err) {
-      console.error(err);
+      console.error("Error saving profile:", err);
+      alert("Failed to save profile. Please try again.");
     }
   };
 
@@ -491,7 +537,7 @@ function HealthProfile() {
                             ? value
                                 .split(",")
                                 .map((s) => s.trim())
-                                .filter((s) => s)
+                                .filter((s) => s.length > 0)
                             : [],
                         });
                       }}
@@ -515,7 +561,7 @@ function HealthProfile() {
                             ? value
                                 .split(",")
                                 .map((s) => s.trim())
-                                .filter((s) => s)
+                                .filter((s) => s.length > 0)
                             : [],
                         });
                       }}
@@ -539,7 +585,7 @@ function HealthProfile() {
                             ? value
                                 .split(",")
                                 .map((s) => s.trim())
-                                .filter((s) => s)
+                                .filter((s) => s.length > 0)
                             : [],
                         });
                       }}
