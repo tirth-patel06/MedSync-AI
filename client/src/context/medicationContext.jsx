@@ -1,100 +1,125 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import React, { createContext, useContext, useState, useCallback } from "react";
+import apiClient from "../services/api/client";
 
 const MedicineContext = createContext();
 
 export const useMedicine = () => useContext(MedicineContext);
 
 export const MedicineProvider = ({ children }) => {
+  /**
+   * IMPORTANT SECURITY NOTE:
+   * - We do NOT trust localStorage for identity
+   * - localuser is used ONLY for UI convenience
+   * - Backend MUST derive user from auth (JWT/session)
+   */
   const [localuser, setLocaluser] = useState(() => {
     try {
-      const stored = localStorage.getItem("user"); 
+      const stored = localStorage.getItem("user");
       if (!stored || stored === "undefined") return null;
       return JSON.parse(stored);
-    } catch (e) {
-      console.error("Error parsing localStorage user:", e);
+    } catch {
       return null;
     }
   });
-    
-   const [medication, setMedication] = useState({
-     pillName: "",
-     pillDescription: "",
-     dosageDays: [],
-     dosageTimes: [],
-     dosageAmount: "",
-     frequency: "",
-     startDate: new Date().toISOString().split('T')[0],
-     endDate: ""
-   });
 
-
-const addMedication = useCallback(async () => {
-  if (!localuser?.id) return;
-
-  return apiClient({
-    url: "http://localhost:8080/api/medicine/add",
-    method: "POST",
-    body: {
-      medication,
-      localuser,
-    },
-    actionType: "ADD_MEDICATION",
+  const [medication, setMedication] = useState({
+    pillName: "",
+    pillDescription: "",
+    dosageDays: [],
+    dosageTimes: [],
+    dosageAmount: "",
+    frequency: "",
+    startDate: new Date().toISOString().split("T")[0],
+    endDate: "",
   });
-}, [medication, localuser]);
 
-    const todayMedication=useCallback(async()=>{
-      if (!localuser?.id) return [];
-      try {       
-        const response = await axios.post('http://localhost:8080/api/medicine/today', {localuser});  
-        console.log('todays medicine fetched succesfully', response.data);
-        return response.data;
-      }
-      catch (error) {
-        console.error('Error adding medication:', error);
-      }
-     }
-     ,[localuser]);
-  
-   const medicineStatus = useCallback(async (medId) => {
-  if (!localuser?.id) return;
+  /**
+   * ADD MEDICATION
+   * - No userId sent
+   * - Backend infers user from auth
+   */
+  const addMedication = useCallback(async () => {
+    if (!localuser) return;
 
-  return apiClient({
-    url: "http://localhost:8080/api/medicine/status",
-    method: "POST",
-    body: {
-      localuser,
-      medId,
+    return apiClient({
+      url: "/api/medicine/add",
+      method: "POST",
+      body: {
+        medication,
+      },
+      actionType: "ADD_MEDICATION",
+    });
+  }, [medication, localuser]);
+
+  /**
+   * FETCH TODAY'S MEDICATION
+   * - Auth handled by apiClient
+   * - No identity in payload
+   */
+  const todayMedication = useCallback(async () => {
+    if (!localuser) return [];
+
+    return apiClient({
+      url: "/api/medicine/today",
+      method: "POST",
+      body: {},
+      actionType: "FETCH_TODAY_MEDICATION",
+    });
+  }, [localuser]);
+
+  /**
+   * UPDATE MEDICATION STATUS (OFFLINE SAFE)
+   * - Stores INTENT only
+   * - No userId
+   * - No frontend timestamps
+   */
+  const medicineStatus = useCallback(
+    async (medId, status) => {
+      if (!localuser) return;
+
+      return apiClient({
+        url: "/api/medicine/status",
+        method: "POST",
+        body: {
+          medId,
+          status,
+        },
+        actionType: "UPDATE_MEDICATION_STATUS",
+      });
     },
-    actionType: "UPDATE_MEDICATION_STATUS",
-  });
-}, [localuser]);
+    [localuser]
+  );
 
- 
-   // Fetch user's streak days
-   const getStreakDays = useCallback(async () => {
-    if (!localuser?.id) return 0;
-    try {
-      const response = await axios.post('http://localhost:8080/api/streak', { localuser });
-      if (response.data && response.data.success) {
-        return response.data.streakDays || 8;
-      }
-      return 8;
-    } catch (error) {
-      console.error('Error fetching streak days:', error);
-      return 0;
-    }
-   }, [localuser]);
+  /**
+   * FETCH STREAK DAYS
+   * - Correct nullish handling
+   * - No identity in payload
+   */
+  const getStreakDays = useCallback(async () => {
+    if (!localuser) return 0;
 
-   return (
-     <MedicineContext.Provider value={{
-       medication, setMedication,
-       addMedication,
-       todayMedication,
-       medicineStatus,
-       getStreakDays
-     }}>
-       {children}
-     </MedicineContext.Provider>
-   );
- };
+    const response = await apiClient({
+      url: "/api/streak",
+      method: "POST",
+      body: {},
+      actionType: "FETCH_STREAK",
+    });
+
+    return response?.streakDays ?? 0;
+  }, [localuser]);
+
+  return (
+    <MedicineContext.Provider
+      value={{
+        medication,
+        setMedication,
+        addMedication,
+        todayMedication,
+        medicineStatus,
+        getStreakDays,
+      }}
+    >
+      {children}
+    </MedicineContext.Provider>
+  );
+};

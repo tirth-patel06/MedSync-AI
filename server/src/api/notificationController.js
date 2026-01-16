@@ -5,6 +5,7 @@ import notifier from "node-notifier";
 
 // Global timer management to prevent duplicate notifications
 const activeTimers = new Map(); // userId -> Set of timer IDs
+const scheduledReminders = new Set(); // Set of reminder keys to prevent duplicates
 
 // Clear all existing timers for a user
 function clearUserTimers(userId) {
@@ -16,6 +17,16 @@ function clearUserTimers(userId) {
     userTimers.clear();
     console.log(`🧹 Cleared ${userTimers.size || 0} existing timers for user ${userId}`);
   }
+  
+  // Also clear scheduled reminder keys for this user
+  const keysToDelete = [];
+  scheduledReminders.forEach(key => {
+    if (key.startsWith(`${userId}-`)) {
+      keysToDelete.push(key);
+    }
+  });
+  keysToDelete.forEach(key => scheduledReminders.delete(key));
+  console.log(`🧹 Cleared ${keysToDelete.length} scheduled reminder keys for user ${userId}`);
 }
 
 // Add timer to tracking
@@ -33,6 +44,10 @@ function getTimeForToday(timeStr) {
   return new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
 }
 
+function getReminderKey(userId, medicationId, scheduledTime, type) {
+  // Create stable key: "userId_medId_ISO-time_type"
+  return `${userId}_${medicationId}_${scheduledTime.toISOString()}_${type}`;
+}
 
 // Helper: convert "15m" -> ms
 function parseDuration(str) {
@@ -352,24 +367,25 @@ function getBasicNotification(type, medication) {
 }
 
 
-
+const scheduleReminders = new Set();
 
 // Main scheduler
 export default async function startNotificationScheduler(user) {
   console.log("📅 Starting daily medication notification scheduler...");
   let userId;
-if (user?.user?.id) {
-  // if called from login (wrapped object)
-  userId = user.user.id.toString();
-} else if (user?._id) {
-  // if called from signup (Mongoose document)
-  userId = user._id.toString();
-} else {
-  console.error("Invalid user object passed to scheduler:", user);
-  return; // exit if user is invalid
-}
-
-console.log("User id:", userId);
+  
+  if (user?.user?.id) {
+    // if called from login (wrapped object)
+    userId = user.user.id.toString();
+  } else if (user?._id) {
+    // if called from signup (Mongoose document)
+    userId = user._id.toString();
+  } else {
+    console.error("Invalid user object passed to scheduler:", user);
+    return; // exit if user is invalid
+  }
+  
+  console.log("User id:", userId);
 
   // 🧹 Clear any existing timers for this user to prevent duplicates
   clearUserTimers(userId);
@@ -400,22 +416,56 @@ console.log("User id:", userId);
     todaysMeds.forEach((med) => {
       med.dosageTimes.forEach(async (dose) => {
         const medTime = getTimeForToday(dose.time);
-
-        // BEFORE reminder
         const beforeMs = medTime.getTime() - parseDuration(dose.remindBefore);
+        if (beforeMs < Date.now()) {
+          console.log(`⏭️ Skipping PAST reminder for ${med.pillName} at ${new Date(beforeMs).toLocaleTimeString()}`);
+          return; // skip past times
+        }
+        
+        // BEFORE reminder
         if (beforeMs > Date.now()) {
+          const beforeTime = new Date(beforeMs);
+          const reminderKey = getReminderKey(userId, med._id, beforeTime, 'before');
+          
+          // ✅ Check if already scheduled in memory
+          if (scheduledReminders.has(reminderKey)) {
+            console.log(`⏭️ Skipping duplicate BEFORE reminder: ${reminderKey}`);
+            return;
+          }
+          
+          // ✅ Check if already sent in database
+          if (dose.lastReminderSentAt && dose.lastReminderSentAt >= beforeTime) {
+            console.log(`⏭️ BEFORE reminder already sent at ${dose.lastReminderSentAt}`);
+            return;
+          }
+          
+          // Mark as scheduled
+          scheduledReminders.add(reminderKey);
+          
           const timerId = setTimeout(async () => {
-            // 🎯 Generate personalized notification
-            const personalizedNotif = await generatePersonalizedNotification(
-              userId, med, 'before', medTime
-            );
-            
-            sendNotification(
-              personalizedNotif.title,
-              personalizedNotif.message,
-              userId,
-              "before"
-            );
+            try {
+              // 🎯 Generate personalized notification
+              const personalizedNotif = await generatePersonalizedNotification(
+                userId, med, 'before', medTime
+              );
+              
+              sendNotification(
+                personalizedNotif.title,
+                personalizedNotif.message,
+                userId,
+                "before"
+              );
+              
+              // 🆕 Mark as sent in database
+              await Medication.updateOne(
+                { _id: med._id, "dosageTimes.time": dose.time },
+                { $set: { "dosageTimes.$.lastReminderSentAt": new Date() } }
+              );
+              
+              console.log(`✅ BEFORE reminder sent and logged for ${med.pillName}`);
+            } catch (error) {
+              console.error(`❌ Error sending BEFORE reminder:`, error);
+            }
           }, beforeMs - Date.now());
 
           // 💾 Save to DB with personalized message
@@ -434,7 +484,7 @@ console.log("User id:", userId);
                   type: "before",
                   medicineId: med._id,
                   medicineName: med.pillName,
-                  time: new Date(beforeMs),
+                  time: beforeTime,
                 },
               },
             },
@@ -443,25 +493,54 @@ console.log("User id:", userId);
           
           // Track the timer
           addUserTimer(userId, timerId);
-          console.log(`⏰ Scheduled PERSONALIZED BEFORE reminder for ${med.pillName} at ${new Date(beforeMs).toLocaleTimeString()}`);
+          console.log(`⏰ Scheduled PERSONALIZED BEFORE reminder for ${med.pillName} at ${beforeTime.toLocaleTimeString()}`);
         }
 
 
   
         // ON-TIME reminder
         if (medTime.getTime() > Date.now()) {
+          const reminderKey = getReminderKey(userId, med._id, medTime, 'onTime');
+          
+          // ✅ Check if already scheduled in memory
+          if (scheduledReminders.has(reminderKey)) {
+            console.log(`⏭️ Skipping duplicate ON-TIME reminder: ${reminderKey}`);
+            return;
+          }
+          
+          // ✅ Check if already sent in database
+          if (dose.lastReminderSentAt && dose.lastReminderSentAt >= medTime) {
+            console.log(`⏭️ ON-TIME reminder already sent at ${dose.lastReminderSentAt}`);
+            return;
+          }
+          
+          // Mark as scheduled
+          scheduledReminders.add(reminderKey);
+          
           const timerId = setTimeout(async () => {
-            // 🎯 Generate personalized notification
-            const personalizedNotif = await generatePersonalizedNotification(
-              userId, med, 'onTime', medTime
-            );
-            
-            sendNotification(
-              personalizedNotif.title,
-              personalizedNotif.message,
-              userId,
-              "onTime"
-            );
+            try {
+              // 🎯 Generate personalized notification
+              const personalizedNotif = await generatePersonalizedNotification(
+                userId, med, 'onTime', medTime
+              );
+              
+              sendNotification(
+                personalizedNotif.title,
+                personalizedNotif.message,
+                userId,
+                "onTime"
+              );
+              
+              // 🆕 Mark as sent in database
+              await Medication.updateOne(
+                { _id: med._id, "dosageTimes.time": dose.time },
+                { $set: { "dosageTimes.$.lastReminderSentAt": new Date() } }
+              );
+              
+              console.log(`✅ ON-TIME reminder sent and logged for ${med.pillName}`);
+            } catch (error) {
+              console.error(`❌ Error sending ON-TIME reminder:`, error);
+            }
           }, medTime.getTime() - Date.now());
 
           // 💾 Save to DB with personalized message
@@ -495,18 +574,48 @@ console.log("User id:", userId);
         // AFTER reminder
         const afterMs = medTime.getTime() + parseDuration(dose.remindAfter);
         if (afterMs > Date.now()) {
+          const afterTime = new Date(afterMs);
+          const reminderKey = getReminderKey(userId, med._id, afterTime, 'after');
+          
+          // ✅ Check if already scheduled in memory
+          if (scheduledReminders.has(reminderKey)) {
+            console.log(`⏭️ Skipping duplicate AFTER reminder: ${reminderKey}`);
+            return;
+          }
+          
+          // ✅ Check if already sent in database
+          if (dose.lastReminderSentAt && dose.lastReminderSentAt >= afterTime) {
+            console.log(`⏭️ AFTER reminder already sent at ${dose.lastReminderSentAt}`);
+            return;
+          }
+          
+          // Mark as scheduled
+          scheduledReminders.add(reminderKey);
+          
           const timerId = setTimeout(async () => {
-            // 🎯 Generate personalized notification
-            const personalizedNotif = await generatePersonalizedNotification(
-              userId, med, 'after', medTime
-            );
-            
-            sendNotification(
-              personalizedNotif.title,
-              personalizedNotif.message,
-              userId,
-              "after"
-            );
+            try {
+              // 🎯 Generate personalized notification
+              const personalizedNotif = await generatePersonalizedNotification(
+                userId, med, 'after', medTime
+              );
+              
+              sendNotification(
+                personalizedNotif.title,
+                personalizedNotif.message,
+                userId,
+                "after"
+              );
+              
+              // 🆕 Mark as sent in database
+              await Medication.updateOne(
+                { _id: med._id, "dosageTimes.time": dose.time },
+                { $set: { "dosageTimes.$.lastReminderSentAt": new Date() } }
+              );
+              
+              console.log(`✅ AFTER reminder sent and logged for ${med.pillName}`);
+            } catch (error) {
+              console.error(`❌ Error sending AFTER reminder:`, error);
+            }
           }, afterMs - Date.now());
 
           // 💾 Save to DB with personalized message

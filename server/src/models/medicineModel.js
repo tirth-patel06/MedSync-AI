@@ -5,7 +5,8 @@ const DosageTimeSchema = new mongoose.Schema({
   remindBefore: { type: String, default: "15m" }, 
   remindAfter: { type: String, default: "30m" },
   status: { type: String, enum: ["pending", "taken", "missed", "delayed"], default: "pending" },
-  takenAt: { type: Date, default: null }
+  takenAt: { type: Date, default: null },
+  lastReminderSentAt: { type: Date, default: null }
 });
 
 
@@ -35,6 +36,12 @@ const MedicationSchema = new mongoose.Schema({
   frequency: { type: String },      // e.g. "2 times a day"
   startDate: { type: Date, required: true },  // date of starting medication
   endDate: { type: Date },    // date of deletion of medication
+
+  originalInstructions: { type: String },
+  translatedInstructions: {
+    es: { type: String },
+    hi: { type: String }
+  },
 
   adherenceHistory: [AdherenceSchema],
 

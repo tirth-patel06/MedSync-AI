@@ -26,10 +26,13 @@ export const CalendarSyncProvider = ({ children }) => {
 
   // Check calendar sync status
   const checkSyncStatus = useCallback(async () => {
-    if (!localuser?.id) return;
+    const token = localStorage.getItem("token");
+    if (!token) return;
     
     try {
-      const response = await axios.post('http://localhost:8080/api/calendar/status', { localuser });
+      const response = await axios.post('http://localhost:8080/api/calendar/status', {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       if (response.data && response.data.success) {
         setSyncStatus(prev => ({
           ...prev,
@@ -47,19 +50,23 @@ export const CalendarSyncProvider = ({ children }) => {
         syncEnabled: false
       }));
     }
-  }, [localuser]);
+  }, []);
 
   // Sync medications to Google Calendar
   const syncToCalendar = useCallback(async () => {
-    if (!localuser?.id) {
-      throw new Error("User not logged in");
+    const token = localStorage.getItem("token");
+    if (!token) {
+      const err = new Error("User not logged in");
+      console.error("[Sync Context] Sync failed: User not logged in");
+      throw err;
     }
     
     setSyncStatus(prev => ({ ...prev, isSyncing: true }));
     
     try {
-      const response = await axios.post('http://localhost:8080/api/calendar/sync', { localuser });
-      
+      const response = await axios.post('http://localhost:8080/api/calendar/sync', {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       if (response.data && response.data.success) {
         setSyncStatus(prev => ({
           ...prev,
@@ -76,14 +83,15 @@ export const CalendarSyncProvider = ({ children }) => {
           details: response.data.syncDetails
         };
       } else {
-        throw new Error(response.data?.message || 'Sync failed');
+        const errorMsg = response.data?.message || 'Sync failed for unknown reason';
+        throw new Error(errorMsg);
       }
     } catch (error) {
       setSyncStatus(prev => ({ ...prev, isSyncing: false }));
-      console.error('Calendar sync error:', error);
-      throw error;
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to sync calendar';
+      throw new Error(errorMessage);
     }
-  }, [localuser]);
+  }, []);
 
   // Connect to Google Calendar (redirect to OAuth)
   const connectCalendar = useCallback(() => {
