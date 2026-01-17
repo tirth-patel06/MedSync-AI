@@ -7,10 +7,12 @@ import { BrowserRouter } from 'react-router-dom'
 import { NotificationProvider } from './context/notificationContext.jsx'
 import { SocketProvider } from './context/socketContext.jsx'
 
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <BrowserRouter>
     <SocketProvider>
     <NotificationProvider>
    <MedicineProvider>
@@ -19,7 +21,8 @@ createRoot(document.getElementById('root')).render(
    </MedicineProvider>
    </NotificationProvider>
    </SocketProvider>
-    </BrowserRouter>
+      </BrowserRouter>
+    </GoogleOAuthProvider>
   </StrictMode>,
 )
 

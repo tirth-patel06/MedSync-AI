@@ -57,18 +57,27 @@ export const MedicineProvider = ({ children }) => {
      }
      ,[localuser]);
   
-     const medicineStatus =useCallback(async(medId)=>{
-      if (!localuser?.id) return;
-       try{
-         const response = await axios.post('http://localhost:8080/api/medicine/status', {localuser,medId});  
-        console.log('status changed sucessfully', response.data);
-        return response.data;
-       }
-       catch(error){
-         console.error('Error updating status:', error);
-       }
- 
-     },[localuser])
+     const medicineStatus = useCallback(async (medId, status) => {
+  if (!localuser?.id) return;
+
+  try {
+    const response = await axios.post(
+      'http://localhost:8080/api/medicine/status',
+      {
+        localuser,
+        medId,
+        status, //  THIS IS THE KEY FIX
+        timestamp: new Date().toISOString()
+      }
+    );
+
+    console.log('Status changed successfully:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating status:', error);
+  }
+}, [localuser]);
+
    
  
    // Fetch user's streak days

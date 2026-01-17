@@ -1,489 +1,430 @@
 # Contributing to MedSync AI
 
-Thank you for your interest in contributing to MedSync AI! This document provides guidelines and instructions for developers who want to contribute to the project. We welcome contributions from developers of all skill levels.
+> **Labels:** `documentation`, `help wanted`
+
+Thank you for your interest in contributing to MedSync AI! This guide provides an overview of the contribution process. For detailed setup instructions, see the specific guides for [Frontend](./client/CONTRIBUTING.md) and [Backend](./server/CONTRIBUTING.md).
 
 ---
 
-## Table of Contents
+## 📋 Table of Contents
 
-- [Important Announcements](#important-announcements)
-- [Code of Conduct](#code-of-conduct)
-- [Getting Started](#getting-started)
-- [Development Setup](#development-setup)
+- [Quick Start](#quick-start)
 - [Project Structure](#project-structure)
-- [How to Contribute](#how-to-contribute)
-- [Development Guidelines](#development-guidelines)
-- [Testing](#testing)
-- [Submitting Changes](#submitting-changes)
-- [Common Development Tasks](#common-development-tasks)
-- [Troubleshooting](#troubleshooting)
-- [Questions or Need Help?](#questions-or-need-help)
+- [Development Setup](#development-setup)
+  - [Frontend Setup](#frontend-setup)
+  - [Backend Setup](#backend-setup)
+- [Environment Variables & Security](#environment-variables--security)
+- [Branch & Pull Request Workflow](#branch--pull-request-workflow)
+- [Testing & Linting](#testing--linting)
+- [Code Style Guidelines](#code-style-guidelines)
+- [Getting Help](#getting-help)
 
 ---
 
-## Important Announcements
+## 🚀 Quick Start
 
-**All critical project updates, contribution guidelines, submission rules, timelines, and community announcements are published in the [GitHub Discussions → Announcements](https://github.com/tirth-patel06/MedSync-AI/discussions/categories/announcements) section.**
+**Prerequisites:**
+- Node.js 18+ (LTS recommended)
+- npm (comes with Node.js)
+- MongoDB (local installation or MongoDB Atlas account)
+- Git
 
-As a contributor, it is your responsibility to review announcements regularly before and during your contribution. This ensures you are aware of:
-
-- Project roadmap and priority areas
-- Contribution deadlines (if applicable)
-- Breaking changes or architectural decisions
-- Community standards and expectations
-- Important dependency updates
-- API or protocol changes affecting contributions
-
-**Contributors who miss critical announcements may have PRs rejected or delayed.** We strongly recommend enabling notifications for this category to stay informed.
-
----
-
-## Code of Conduct
-
-### Our Commitment
-
-We are committed to providing a welcoming and inclusive environment for all contributors. We expect all participants to:
-
-- **Be respectful:** Treat all contributors with courtesy and professionalism
-- **Be constructive:** Provide helpful feedback and critique
-- **Be inclusive:** Welcome contributions from people of all backgrounds and experience levels
-- **Report issues:** If you witness or experience inappropriate behavior, report it to the maintainers
-
-Unacceptable behavior includes harassment, discrimination, or disrespect toward any contributor. The maintainers reserve the right to remove contributions or ban contributors who violate these principles.
-
----
-
-## Getting Started
-
-### Prerequisites
-
-Before you begin, ensure you have the following installed:
-
-- **Node.js** (v16+ LTS recommended) — [Download](https://nodejs.org/)
-- **npm** (comes with Node.js)
-- **MongoDB** access (local or cloud) — We use MongoDB Atlas
-- **Git** — [Download](https://git-scm.com/)
-
-### Step 1: Fork the Repository
-
-1. Go to [MedSync-AI on GitHub](https://github.com/tirth-patel06/MedSync-AI)
-2. Click the **Fork** button in the top-right corner
-3. Clone your forked repository:
+**Quick Setup (Two Terminals):**
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/MedSync-AI.git
-cd MedSync-AI
-```
+# Terminal 1: Backend
+cd server
+npm install
+# Create .env file (see Environment Variables section)
+npm run dev  # Runs on http://localhost:8080
 
-### Step 2: Add Upstream Remote
-
-Link your local repo to the original repository to keep it in sync:
-
-```bash
-git remote add upstream https://github.com/tirth-patel06/MedSync-AI.git
-```
-
-Verify remotes:
-```bash
-git remote -v
-# origin    -> your fork
-# upstream  -> original repo
+# Terminal 2: Frontend
+cd client
+npm install
+# Create .env file if needed (see Environment Variables section)
+npm run dev  # Runs on http://localhost:5173
 ```
 
 ---
 
-## Development Setup
+## 📁 Project Structure
 
-### Frontend (React + Vite + Tailwind)
+MedSync AI is a monorepo with separate frontend and backend applications:
 
+```
+MedSync-AI/
+├── client/                    # React frontend application
+│   ├── src/
+│   │   ├── components/        # Reusable UI components
+│   │   ├── context/           # React Context providers
+│   │   ├── pages/             # Page components (routes)
+│   │   ├── services/          # External service integrations
+│   │   └── ...
+│   ├── CONTRIBUTING.md        # Frontend-specific contributing guide
+│   └── package.json
+│
+├── server/                    # Express.js backend API
+│   ├── src/
+│   │   ├── api/              # Controller functions
+│   │   ├── routes/           # Express route definitions
+│   │   ├── models/           # Mongoose schemas
+│   │   ├── middlewares/      # Express middleware
+│   │   ├── services/         # Service modules
+│   │   ├── utils/            # Utilities & AI handlers
+│   │   └── index.js         # Application entry point
+│   ├── CONTRIBUTING.md       # Backend-specific contributing guide
+│   └── package.json
+│
+├── ARCHITECTURE.md           # System architecture documentation
+├── CONTRIBUTING.md           # This file (general contributing guide)
+├── README.md                 # Project overview
+└── SECURITY.md              # Security guidelines
+```
+
+**For detailed folder structure explanations:**
+- Frontend: See [client/CONTRIBUTING.md](./client/CONTRIBUTING.md#folder-structure)
+- Backend: See [server/CONTRIBUTING.md](./server/CONTRIBUTING.md#folder-structure)
+
+---
+
+## 💻 Development Setup
+
+### Frontend Setup
+
+The frontend is a React application built with Vite and Tailwind CSS.
+
+**Location:** `client/`
+
+**Quick Setup:**
 ```bash
 cd client
 npm install
-npm run dev  # Runs at http://localhost:5173
+npm run dev  # Starts at http://localhost:5173
 ```
 
-**Available scripts:** `dev`, `build`, `preview`, `lint`
+**📖 For detailed frontend setup, folder structure, and guidelines, see:**
+**[client/CONTRIBUTING.md](./client/CONTRIBUTING.md)**
 
-### Backend (Express.js + MongoDB)
+**Key Tech Stack:**
+- React 19.2.0 + Vite 7.1.7
+- Tailwind CSS 4.1.14
+- React Router DOM 7.9.3
+- Socket.IO Client 4.8.1
+- Axios 1.12.2
 
+---
+
+### Backend Setup
+
+The backend is an Express.js API server with Socket.IO for real-time notifications.
+
+**Location:** `server/`
+
+**Quick Setup:**
 ```bash
 cd server
 npm install
-
-# Create .env file (see SECURITY.md for all required variables)
-# Minimum required: MONGO_URI, JWT_SECRET, and LLM API keys
-
-npm run dev  # Server runs at http://localhost:8080
+# Create .env file (see Environment Variables section)
+npm run dev  # Starts at http://localhost:8080
 ```
 
-**Note:** Full `.env` setup details are in [SECURITY.md](SECURITY.md).
+**📖 For detailed backend setup, folder structure, and guidelines, see:**
+**[server/CONTRIBUTING.md](./server/CONTRIBUTING.md)**
 
-### Frontend `.env` Setup (Optional)
-
-Create `client/.env` if needed:
-```env
-VITE_API_BASE_URL=http://localhost:8080
-VITE_SOCKET_URL=http://localhost:8080
-```
+**Key Tech Stack:**
+- Express.js 5.1.0
+- MongoDB 6.20.0 + Mongoose 8.19.0
+- Socket.IO 4.8.1
+- LangChain 0.3.35 (Groq/Gemini)
+- JWT, bcryptjs, Google APIs
 
 ---
 
-## Project Structure
+## 🔐 Environment Variables & Security
 
-Understanding the codebase layout helps you navigate and contribute effectively:
+### ⚠️ Critical Security Rules
 
-### Frontend (`client/`)
+1. **Never commit `.env` files** - They are already in `.gitignore`
+2. **Never commit API keys, secrets, or tokens** - Always use environment variables
+3. **Use separate `.env` files** for `client/` and `server/`
+4. **If a secret is exposed:**
+   - Rotate it immediately
+   - Scrub it from git history
+   - Document the rotation in your PR
 
-```
-client/
-├── src/
-│   ├── pages/              # Page components (views)
-│   │   ├── Dashboard.jsx
-│   │   ├── Login.jsx
-│   │   ├── Signup.jsx
-│   │   ├── addMedication.jsx
-│   │   ├── agents.jsx
-│   │   ├── Reports.jsx
-│   │   ├── ReportChat.jsx
-│   │   ├── Analytics.jsx
-│   │   └── ...
-│   ├── components/         # Reusable components
-│   │   ├── Navbar.jsx
-│   │   ├── ProtectedRoute.jsx
-│   │   └── NotificationToast.jsx
-│   ├── context/            # React Context for state management
-│   │   ├── medicationContext.jsx
-│   │   ├── notificationContext.jsx
-│   │   ├── socketContext.jsx
-│   │   └── calendarSyncContext.jsx
-│   ├── services/           # API & external service helpers
-│   │   └── socketService.js
-│   ├── assets/             # Images, icons, static files
-│   ├── App.jsx             # Main app with routing
-│   ├── main.jsx            # React entry point
-│   └── global.css          # Global styles (Tailwind)
-├── package.json
-├── vite.config.js
-├── eslint.config.js
-└── index.html              # HTML template
-```
+### Required Environment Variables
 
-### Backend (`server/`)
+**Backend (`server/.env`):**
+- `PORT` - Server port (default: 8080)
+- `MONGO_URI` - MongoDB connection string
+- `JWT_SECRET` - Secret key for JWT token signing
+- `GROQ_API_KEY` - API key for Groq LLM (required for AI agents)
+- `GEMINI_API_KEY` - API key for Google Gemini (optional, for AI agents)
+- `HUGGINGFACEHUB_API_KEY` - Hugging Face API key (optional)
+- `GOOGLE_CLIENT_ID` - Google OAuth2 client ID (for Calendar sync)
+- `GOOGLE_CLIENT_SECRET` - Google OAuth2 client secret
+- `GOOGLE_REDIRECT_URI` - OAuth callback URL
 
-```
-server/
-├── src/
-│   ├── index.js            # Entry point (Express + Socket.IO setup)
-│   ├── routes/             # API route definitions
-│   │   ├── auth.js         # Authentication routes
-│   │   ├── medicineRoutes.js
-│   │   ├── notificationRoutes.js
-│   │   ├── analyticsRoutes.js
-│   │   ├── reportRoutes.js
-│   │   ├── agentsRoutes.js
-│   │   ├── calendarSyncRoutes.js
-│   │   └── oauth.js        # Google OAuth routes
-│   ├── api/                # Controllers (business logic)
-│   │   ├── addMedicineController.js
-│   │   ├── notificationController.js
-│   │   ├── reportController.js
-│   │   ├── analyticsController.js
-│   │   ├── calendarSyncController.js
-│   │   └── ...
-│   ├── models/             # Mongoose schemas
-│   │   ├── User.js
-│   │   ├── medicineModel.js
-│   │   ├── HealthProfile.js
-│   │   ├── ReportModel.js
-│   │   ├── ConversationModel.js
-│   │   └── ...
-│   ├── utils/              # Utility functions and AI handlers
-│   │   ├── medical_model.js     # Medical Q&A AI agent
-│   │   ├── medicine_model.js    # Medication info AI agent
-│   │   ├── emergency_model.js   # Emergency triage AI agent
-│   │   ├── personal_health_model.js
-│   │   ├── reportAnalysis.js    # PDF analysis logic
-│   │   └── googleCalendar.js    # Google Calendar integration
-│   ├── middlewares/        # Express middleware
-│   │   └── authMiddleware.js
-│   └── services/           # External service integrations
-│       └── sendNotification.js
-├── test/                   # Test files
-├── package.json
-├── .env                    # Environment variables (not in git)
-└── .gitignore
-```
+**Frontend (`client/.env`):**
+- `VITE_API_BASE_URL` - Backend API base URL (default: http://localhost:8080)
+- `VITE_SOCKET_URL` - Socket.IO server URL (default: http://localhost:8080)
+- `VITE_GOOGLE_OAUTH_LOGIN` - Google OAuth login endpoint
+
+### Getting API Keys
+
+- **MongoDB:** Sign up at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) (free tier available)
+- **Groq:** Sign up at [Groq](https://console.groq.com/) for LLM API access
+- **Google Gemini:** Get API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+- **Google OAuth:** Create OAuth2 credentials in [Google Cloud Console](https://console.cloud.google.com/)
+
+For detailed security guidelines, see `SECURITY.md`.
 
 ---
 
-## How to Contribute
+## 🌿 Branch & Pull Request Workflow
 
-### 1. Identify an Issue or Feature
-
-- Check the [GitHub Issues](https://github.com/tirth-patel06/MedSync-AI/issues) for open items
-- Look for issues labeled:
-  - `good first issue` — Perfect for newcomers
-  - `help wanted` — Needs community support
-  - `enhancement` — New features
-  - `bug` — Bugs to fix
-- If you have a new idea, open a **Discussion** first to gather feedback
-
-### 2. Comment to Get Assigned
-
-- Comment on the issue saying you'd like to work on it
-- Wait for maintainer feedback (we'll assign you)
-- This prevents duplicate work
-
-### 3. Create a Feature Branch
+### 1. Fork & Clone
 
 ```bash
-git checkout -b feature/your-feature-name
-# or for bug fixes:
-git checkout -b fix/bug-description
+# Fork the repository on GitHub, then:
+git clone https://github.com/YOUR_USERNAME/MedSync-AI.git
+cd MedSync-AI
+git remote add upstream https://github.com/tirth-patel06/MedSync-AI.git
 ```
 
-**Branch naming conventions:**
-- `feature/add-email-notifications` — New feature
-- `fix/incorrect-medication-schedule` — Bug fix
-- `docs/improve-setup-guide` — Documentation
-- `refactor/simplify-auth-logic` — Code refactoring
+### 2. Create a Branch
 
-### 4. Make Your Changes
+Use descriptive branch names with prefixes:
+
+```bash
+git checkout -b feature/short-description
+# Examples:
+# - feature/add-dark-mode
+# - fix/notification-bug
+# - docs/update-readme
+# - refactor/auth-middleware
+```
+
+**Branch Naming Conventions:**
+- `feature/` - New features
+- `fix/` - Bug fixes
+- `docs/` - Documentation changes
+- `refactor/` - Code refactoring
+- `test/` - Adding tests
+- `chore/` - Maintenance tasks
+
+### 3. Make Changes
 
 - Write clean, readable code
-- Follow the style guides (see below)
-- Make commits with clear messages:
+- Follow the code style guidelines (see below)
+- Test your changes locally
+- Run linters before committing
+
+### 4. Commit Your Changes
+
+Use conventional commit messages:
 
 ```bash
-git add .
-git commit -m "Add email notification feature for medication reminders"
+git commit -m "type: short description"
 ```
 
-### 5. Keep Your Branch Updated
+**Commit Types:**
+- `feat:` - New feature
+- `fix:` - Bug fix
+- `docs:` - Documentation changes
+- `style:` - Code style changes (formatting, etc.)
+- `refactor:` - Code refactoring
+- `test:` - Adding or updating tests
+- `chore:` - Maintenance tasks
 
-Before submitting, sync with the latest upstream changes:
+**Examples:**
+```bash
+git commit -m "feat: add dark mode toggle"
+git commit -m "fix: resolve notification timing issue"
+git commit -m "docs: update contributing guide"
+```
+
+### 5. Stay Up to Date
+
+Before pushing, sync with upstream:
 
 ```bash
 git fetch upstream
 git rebase upstream/main
-# or if rebasing is complex:
-git merge upstream/main
+# Resolve any conflicts if they occur
 ```
 
-### 6. Push to Your Fork
+### 6. Push & Create Pull Request
 
 ```bash
-git push origin feature/your-feature-name
+git push origin feature/your-branch-name
 ```
 
-### 7. Open a Pull Request
+Then create a Pull Request on GitHub:
 
-1. Go to the [original repository](https://github.com/tirth-patel06/MedSync-AI)
-2. Click **New Pull Request**
-3. Select your branch from your fork
-4. Fill in the PR template with:
-   - Clear title: "Add email notifications for medication reminders"
-   - Description of changes
-   - Related issue(s): "Closes #123"
-   - Screenshots (if UI changes)
-   - Testing notes
+1. **Link to an issue** - Comment on the issue to get assigned, then reference it in your PR (`Closes #123` or `Fixes #123`)
+2. **Add labels** - For onboarding-friendly PRs, add `documentation` and `help wanted` labels
+3. **Write a clear description:**
+   - What changed and why
+   - How to test the changes
+   - Screenshots/GIFs for UI changes
+   - Any breaking changes
+
+### 7. PR Checklist
+
+Before submitting, ensure:
+
+- [ ] Code follows style guidelines
+- [ ] Linter passes (`npm run lint` in client)
+- [ ] No secrets or `.env` files committed
+- [ ] Tests pass (if applicable)
+- [ ] Documentation updated (if needed)
+- [ ] PR description is clear and complete
+- [ ] Screenshots/GIFs included for UI changes
+- [ ] Issue referenced in PR description
 
 ---
 
-## Development Guidelines
+## 🧪 Testing & Linting
 
-### Code Style
+### Frontend Testing & Linting
 
-**Frontend (React):**
-- Functional components with hooks
-- camelCase for variables/functions, PascalCase for components
-- Descriptive names
+**Linting:**
+```bash
+cd client
+npm run lint
+```
 
-**Backend (Node.js):**
-- camelCase for variables/functions, PascalCase for models
-- SCREAMING_SNAKE_CASE for constants
-- JSDoc comments for functions
+**Build Check:**
+```bash
+npm run build
+npm run preview  # Verify production build works
+```
+
+**Manual Testing:**
+- Test authentication flow (signup/login)
+- Test medication CRUD operations
+- Test notifications (Socket.IO)
+- Test AI agent chat
+- Test report upload and analysis
+- Test Google Calendar sync (if configured)
+
+**Note:** Frontend tests are not yet set up. Contributions adding React Testing Library tests are welcome!
+
+### Backend Testing & Linting
+
+**Manual Testing:**
+- Test API endpoints with Postman, cURL, or similar tools
+- Verify Socket.IO connections
+- Test authentication middleware
+- Test AI agent endpoints
+- Test file uploads (PDF parsing)
+
+**Example cURL Test:**
+```bash
+# Test health endpoint
+curl http://localhost:8080/
+
+# Test protected endpoint (requires JWT token)
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" http://localhost:8080/api/medicine
+```
+
+**Note:** Backend tests are not yet configured. Contributions adding Jest + Supertest are welcome!
+
+### End-to-End Testing
+
+1. Start backend: `cd server && npm run dev`
+2. Start frontend: `cd client && npm run dev`
+3. Test complete user flows:
+   - Sign up → Login → Add medication → Receive notifications
+   - Upload report → Analyze → Chat with report
+   - Connect Google Calendar → Sync medication schedule
+
+---
+
+## 📝 Code Style Guidelines
+
+### React/Frontend
+
+- **Components:** Use functional components with hooks
+- **Naming:** PascalCase for components, camelCase for variables/functions
+- **Structure:** Keep components small and composable
+- **Context:** Use React Context API for global state (medication, notifications, socket)
+- **Styling:** Use Tailwind CSS utility classes
+- **Imports:** Group imports (React, third-party, local)
 
 **Example:**
-```javascript
-// Good ✓
-const MAX_RETRIES = 3;
+```jsx
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useSocket } from '../context/socketContext';
 
-async function getUserMedications(userId) {
-  return await Medicine.find({ userId });
-}
-
-// Bad ✗
-async function get_meds(user_id) {
-  return Medicine.find({ userId: user_id });
-}
-```
-
-### Commit Messages
-
-Format: `type: subject`
-
-**Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
-
-```
-feat: Add email notifications for reminders
-
-- Implement email service
-- Add user preferences
-- Update notification controller
-
-Closes #123
-```
-
-### Error Handling
-
-**Always handle errors properly:**
-
-```javascript
-// Frontend
-try {
-  const data = await fetchMedications();
-} catch (error) {
-  toast.error('Failed to load: ' + error.message);
-}
-
-// Backend
-try {
-  const medicine = await Medicine.create(req.body);
-  res.json(medicine);
-} catch (error) {
-  console.error('Error:', error);
-  res.status(500).json({ error: 'Operation failed' });
-}
-```
-
----
-
-## Testing
-
-### Automated Tests
-
-Currently, no automated tests exist. **Contributors welcome to:**
-- Set up Jest + React Testing Library (frontend)
-- Add backend API tests
-- Write tests for components and utilities
-
-### Manual Testing Checklist
-
-**Frontend:**
-- [ ] App loads without errors
-- [ ] Login/Signup works
-- [ ] Medication CRUD works
-- [ ] Real-time notifications work
-- [ ] Responsive on mobile
-
-**Backend:**
-- [ ] API endpoints return correct codes
-- [ ] Auth middleware protects routes
-- [ ] Database operations work
-- [ ] Socket.IO notifications work
-
----
-
-## Submitting Changes
-
-### Before submitting your PR:
-
-- [ ] Branch from latest `main`
-- [ ] Code follows style guidelines
-- [ ] No console errors/warnings
-- [ ] Clear commit messages
-- [ ] Related issues referenced
-- [ ] Screenshots (if UI changes)
-- [ ] No secrets in commits
-
-### What to expect:
-
-Maintainers review PRs within 3-7 days. Feedback provided if changes needed.
-
----
-
-## Common Development Tasks
-
-### Add New API Endpoint
-
-1. **Controller** (`server/src/api/yourController.js`):
-```javascript
-export const getYourFeature = async (req, res) => {
-  const data = await YourModel.find({ userId: req.user.id });
-  res.json(data);
+export const MedicationCard = ({ medication }) => {
+  const [loading, setLoading] = useState(false);
+  // ...
 };
 ```
 
-2. **Route** (`server/src/routes/yourRoutes.js`):
+### Node.js/Express/Backend
+
+- **Naming:** camelCase for functions/variables, PascalCase for models/classes
+- **Error Handling:** Always use try/catch blocks with structured error responses
+- **Async/Await:** Prefer async/await over callbacks
+- **Routes:** Keep route handlers thin, move logic to controllers
+- **Models:** Use Mongoose schemas for data validation
+
+**Example:**
 ```javascript
-import { getYourFeature } from '../api/yourController.js';
-import { authMiddleware } from '../middlewares/authMiddleware.js';
-router.get('/feature', authMiddleware, getYourFeature);
+export const getMedications = async (req, res) => {
+  try {
+    const medications = await Medication.find({ userId: req.user.id });
+    res.json({ medications });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 ```
 
-3. **Register** in `server/src/index.js`:
-```javascript
-import yourRoutes from './routes/yourRoutes.js';
-app.use('/api', yourRoutes);
-```
+### General
 
-### Add New Page
-
-1. Create `client/src/pages/YourPage.jsx`
-2. Add route in `client/src/App.jsx`:
-```jsx
-<Route path="/your-page" element={<ProtectedRoute><YourPage /></ProtectedRoute>} />
-```
-
-### Add MongoDB Model
-
-Create `server/src/models/YourModel.js`:
-```javascript
-import mongoose from 'mongoose';
-
-const schema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  name: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now }
-});
-
-export default mongoose.model('YourModel', schema);
-```
+- **Comments:** Add minimal, meaningful comments only where intent isn't obvious
+- **DRY:** Don't repeat yourself - extract reusable functions/components
+- **Small PRs:** Prefer small, focused PRs over large ones
+- **Consistency:** Follow existing code patterns in the codebase
 
 ---
 
-## Troubleshooting
+## 🆘 Getting Help
 
-| Issue | Solution |
-|-------|----------|
-| Port in use | `lsof -i :8080` then `kill -9 <PID>` |
-| MongoDB connection failed | Check `MONGO_URI` in `.env`, verify IP whitelist |
-| CORS errors | Match `VITE_API_BASE_URL` to backend, check CORS config |
-| Missing dependencies | `npm install` in client/server |
-| Socket.IO not connecting | Verify `VITE_SOCKET_URL`, ensure backend runs first |
-
----
-
-## Questions or Need Help?
-
-- **Ask in Discussions:** [GitHub Discussions](https://github.com/tirth-patel06/MedSync-AI/discussions)
-- **Report Bugs:** [GitHub Issues](https://github.com/tirth-patel06/MedSync-AI/issues)
-- **Email Maintainers:** Contact through GitHub profile
+- **Questions:** Open a GitHub Discussion
+- **Bugs:** Open an Issue with:
+  - Clear description
+  - Steps to reproduce
+  - Expected vs actual behavior
+  - Environment details
+- **Feature Requests:** Open an Issue with:
+  - Use case description
+  - Proposed solution (if any)
+- **PR Blockers:** Mention blockers in your PR comments - maintainers will help!
+- **Good First Issues:** Look for issues tagged `good first issue` or `help wanted`
 
 ---
 
-## Additional Resources
+## 🎯 Contribution Ideas
 
-- [Git & GitHub Basics](https://guides.github.com/)
-- [React Documentation](https://react.dev/)
-- [Express.js Guide](https://expressjs.com/)
-- [MongoDB Docs](https://docs.mongodb.com/)
-- [Mongoose Guide](https://mongoosejs.com/)
-- [LangChain Documentation](https://js.langchain.com/)
-- [Socket.IO Docs](https://socket.io/docs/)
-- [Tailwind CSS](https://tailwindcss.com/)
+Looking for ways to contribute? Here are some ideas:
+
+- **Documentation:** Improve docs, add examples, create tutorials
+- **Testing:** Add frontend tests (React Testing Library) or backend tests (Jest + Supertest)
+- **Error Handling:** Improve error messages and validation
+- **UX/UI:** Enhance accessibility, responsiveness, or user experience
+- **AI Agents:** Improve prompts, add safety guardrails, expand agent capabilities
+- **Performance:** Optimize queries, add caching, improve bundle size
+- **CI/CD:** Add GitHub Actions for automated testing and linting
+- **Docker:** Create Docker setup for easier development
 
 ---
 
-**Thank you for contributing to MedSync AI! Your efforts help improve medication adherence worldwide. Happy coding! 🚀**
+Thank you for making MedSync AI better! 🚀
+
+If you have questions or need clarification, don't hesitate to ask. We're here to help!
