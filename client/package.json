@@ -16,6 +16,7 @@
     "@react-oauth/google": "^0.13.4",
     "@tailwindcss/vite": "^4.1.14",
     "axios": "^1.12.2",
+    "idb": "^8.0.3",
     "lucide-react": "^0.544.0",
     "nodemailer": "^7.0.12",
     "react": "^19.2.0",
