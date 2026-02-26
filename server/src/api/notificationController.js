@@ -11,22 +11,26 @@ const scheduledReminders = new Set(); // Set of reminder keys to prevent duplica
 function clearUserTimers(userId) {
   const userTimers = activeTimers.get(userId);
   if (userTimers) {
-    userTimers.forEach(timerId => {
+    userTimers.forEach((timerId) => {
       clearTimeout(timerId);
     });
     userTimers.clear();
-    console.log(`🧹 Cleared ${userTimers.size || 0} existing timers for user ${userId}`);
+    console.log(
+      `🧹 Cleared ${userTimers.size || 0} existing timers for user ${userId}`,
+    );
   }
-  
+
   // Also clear scheduled reminder keys for this user
   const keysToDelete = [];
-  scheduledReminders.forEach(key => {
+  scheduledReminders.forEach((key) => {
     if (key.startsWith(`${userId}-`)) {
       keysToDelete.push(key);
     }
   });
-  keysToDelete.forEach(key => scheduledReminders.delete(key));
-  console.log(`🧹 Cleared ${keysToDelete.length} scheduled reminder keys for user ${userId}`);
+  keysToDelete.forEach((key) => scheduledReminders.delete(key));
+  console.log(
+    `🧹 Cleared ${keysToDelete.length} scheduled reminder keys for user ${userId}`,
+  );
 }
 
 // Add timer to tracking
@@ -41,7 +45,14 @@ function addUserTimer(userId, timerId) {
 function getTimeForToday(timeStr) {
   const [hours, minutes] = timeStr.split(":").map(Number);
   const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
+  return new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    hours,
+    minutes,
+    0,
+  );
 }
 
 function getReminderKey(userId, medicationId, scheduledTime, type) {
@@ -60,62 +71,74 @@ function parseDuration(str) {
 }
 
 // WebSocket notification helper - sends to connected clients
-function sendNotification(title, body, userId = null, type = 'general') {
+function sendNotification(title, body, userId = null, type = "general") {
   const notificationData = {
     title,
     message: body,
     type,
     timestamp: new Date().toISOString(),
-    id: Date.now() + Math.random() // Simple unique ID
+    id: Date.now() + Math.random(), // Simple unique ID
   };
-  
+
   console.log(`[WEBSOCKET NOTIFY] ${title}: ${body}`);
-  
+
   // Send to all connected clients or specific user
   if (global.io) {
     if (userId) {
       // Send to specific user's room
-      global.io.to(`user-${userId}`).emit('notification', notificationData);
+      global.io.to(`user-${userId}`).emit("notification", notificationData);
       console.log(`Notification sent to user ${userId}`);
     } else {
       // Send to all connected clients
-      global.io.emit('notification', notificationData);
-      console.log('Notification sent to all clients');
+      global.io.emit("notification", notificationData);
+      console.log("Notification sent to all clients");
     }
   } else {
-    console.warn('Socket.IO not available - notification not sent');
+    console.warn("Socket.IO not available - notification not sent");
   }
 }
 
 // 🎯 PERSONALIZED NOTIFICATION GENERATOR
-async function generatePersonalizedNotification(userId, medication, notificationType, doseTime) {
+async function generatePersonalizedNotification(
+  userId,
+  medication,
+  notificationType,
+  doseTime,
+) {
   try {
-    console.log(`🧠 Generating personalized notification for ${medication.pillName}`);
-    
+    console.log(
+      `🧠 Generating personalized notification for ${medication.pillName}`,
+    );
+
     // 1️⃣ Get pill adherence stats (last 7 days)
     const lastWeek = new Date();
     lastWeek.setDate(lastWeek.getDate() - 7);
-    
-    const adherenceStats = medication.adherenceHistory
-      .filter(record => record.date >= lastWeek)
-      .reduce((stats, record) => {
-        stats.total++;
-        if (record.status === 'taken') stats.taken++;
-        if (record.status === 'missed') stats.missed++;
-        if (record.status === 'delayed') stats.delayed++;
-        return stats;
-      }, { total: 0, taken: 0, missed: 0, delayed: 0 });
 
-    const adherenceRate = adherenceStats.total > 0 ? 
-      Math.round((adherenceStats.taken / adherenceStats.total) * 100) : 100;
+    const adherenceStats = medication.adherenceHistory
+      .filter((record) => record.date >= lastWeek)
+      .reduce(
+        (stats, record) => {
+          stats.total++;
+          if (record.status === "taken") stats.taken++;
+          if (record.status === "missed") stats.missed++;
+          if (record.status === "delayed") stats.delayed++;
+          return stats;
+        },
+        { total: 0, taken: 0, missed: 0, delayed: 0 },
+      );
+
+    const adherenceRate =
+      adherenceStats.total > 0
+        ? Math.round((adherenceStats.taken / adherenceStats.total) * 100)
+        : 100;
 
     // 2️⃣ Get recent health conversations
-    const recentConversations = await Conversation.find({ 
-      user: userId, 
-      model: { $in: ['personal_health_model', 'medical_model'] }
+    const recentConversations = await Conversation.find({
+      user: userId,
+      model: { $in: ["personal_health_model", "medical_model"] },
     })
-    .sort({ createdAt: -1 })
-    .limit(5);
+      .sort({ createdAt: -1 })
+      .limit(5);
 
     // Analyze conversation themes
     const conversationInsights = analyzeConversationThemes(recentConversations);
@@ -126,17 +149,16 @@ async function generatePersonalizedNotification(userId, medication, notification
 
     // 4️⃣ Generate personalized message based on type
     return createPersonalizedMessage(
-      notificationType, 
-      medication, 
-      adherenceStats, 
-      adherenceRate, 
-      conversationInsights, 
+      notificationType,
+      medication,
+      adherenceStats,
+      adherenceRate,
+      conversationInsights,
       healthProfile,
-      doseTime
+      doseTime,
     );
-
   } catch (error) {
-    console.error('Error generating personalized notification:', error);
+    console.error("Error generating personalized notification:", error);
     // Fallback to basic notification
     return getBasicNotification(notificationType, medication);
   }
@@ -149,34 +171,54 @@ function analyzeConversationThemes(conversations) {
     concerns: [],
     improvements: [],
     sideEffects: [],
-    mood: 'neutral'
+    mood: "neutral",
   };
 
-  conversations.forEach(conv => {
-    const text = (conv.input + ' ' + conv.output).toLowerCase();
-    
+  conversations.forEach((conv) => {
+    const text = (conv.input + " " + conv.output).toLowerCase();
+
     // Detect symptoms mentioned
-    if (text.includes('pain') || text.includes('ache') || text.includes('hurt')) {
-      themes.symptoms.push('pain');
+    if (
+      text.includes("pain") ||
+      text.includes("ache") ||
+      text.includes("hurt")
+    ) {
+      themes.symptoms.push("pain");
     }
-    if (text.includes('tired') || text.includes('fatigue') || text.includes('energy')) {
-      themes.symptoms.push('fatigue');
+    if (
+      text.includes("tired") ||
+      text.includes("fatigue") ||
+      text.includes("energy")
+    ) {
+      themes.symptoms.push("fatigue");
     }
-    if (text.includes('nausea') || text.includes('sick') || text.includes('stomach')) {
-      themes.symptoms.push('digestive');
+    if (
+      text.includes("nausea") ||
+      text.includes("sick") ||
+      text.includes("stomach")
+    ) {
+      themes.symptoms.push("digestive");
     }
-    
+
     // Detect mood indicators
-    if (text.includes('better') || text.includes('good') || text.includes('improved')) {
-      themes.mood = 'positive';
+    if (
+      text.includes("better") ||
+      text.includes("good") ||
+      text.includes("improved")
+    ) {
+      themes.mood = "positive";
     }
-    if (text.includes('worse') || text.includes('bad') || text.includes('difficult')) {
-      themes.mood = 'negative';
+    if (
+      text.includes("worse") ||
+      text.includes("bad") ||
+      text.includes("difficult")
+    ) {
+      themes.mood = "negative";
     }
-    
+
     // Detect side effects
-    if (text.includes('side effect') || text.includes('reaction')) {
-      themes.sideEffects.push('mentioned');
+    if (text.includes("side effect") || text.includes("reaction")) {
+      themes.sideEffects.push("mentioned");
     }
   });
 
@@ -189,13 +231,13 @@ function analyzeHealthProfile(medications) {
     medicationCount: medications.length,
     commonTimes: [],
     medicationTypes: [],
-    complexity: 'simple'
+    complexity: "simple",
   };
 
   // Analyze common dosage times
   const timeFrequency = {};
-  medications.forEach(med => {
-    med.dosageTimes.forEach(dose => {
+  medications.forEach((med) => {
+    med.dosageTimes.forEach((dose) => {
       timeFrequency[dose.time] = (timeFrequency[dose.time] || 0) + 1;
     });
   });
@@ -205,39 +247,58 @@ function analyzeHealthProfile(medications) {
     .slice(0, 3);
 
   // Determine complexity
-  if (medications.length > 3) profile.complexity = 'complex';
-  else if (medications.length > 1) profile.complexity = 'moderate';
+  if (medications.length > 3) profile.complexity = "complex";
+  else if (medications.length > 1) profile.complexity = "moderate";
 
   return profile;
 }
 
 // 💬 Create personalized message based on all data
-function createPersonalizedMessage(type, medication, adherenceStats, adherenceRate, insights, profile, doseTime) {
+function createPersonalizedMessage(
+  type,
+  medication,
+  adherenceStats,
+  adherenceRate,
+  insights,
+  profile,
+  doseTime,
+) {
   const pillName = medication.pillName;
-  const timeStr = new Date(doseTime).toLocaleTimeString('en-US', { 
-    hour: 'numeric', 
-    minute: '2-digit',
-    hour12: true 
+  const timeStr = new Date(doseTime).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
   });
 
   let title, message;
 
   switch (type) {
-    case 'before':
+    case "before":
       title = getPersonalizedBeforeTitle(adherenceRate, insights);
-      message = getPersonalizedBeforeMessage(pillName, medication, adherenceRate, insights, profile);
+      message = getPersonalizedBeforeMessage(
+        pillName,
+        medication,
+        adherenceRate,
+        insights,
+        profile,
+      );
       break;
-      
-    case 'onTime':
+
+    case "onTime":
       title = getPersonalizedOnTimeTitle(adherenceRate, insights);
-      message = getPersonalizedOnTimeMessage(pillName, adherenceRate, insights, timeStr);
+      message = getPersonalizedOnTimeMessage(
+        pillName,
+        adherenceRate,
+        insights,
+        timeStr,
+      );
       break;
-      
-    case 'after':
+
+    case "after":
       title = getPersonalizedAfterTitle(adherenceStats, insights);
       message = getPersonalizedAfterMessage(pillName, adherenceStats, insights);
       break;
-      
+
     default:
       return getBasicNotification(type, medication);
   }
@@ -249,66 +310,80 @@ function createPersonalizedMessage(type, medication, adherenceStats, adherenceRa
 function getPersonalizedBeforeTitle(adherenceRate, insights) {
   if (adherenceRate >= 90) return "⭐ You're doing great! Upcoming reminder";
   if (adherenceRate >= 70) return "🎯 Medicine reminder coming up";
-  if (insights.mood === 'negative') return "💙 Gentle reminder - your health matters";
+  if (insights.mood === "negative")
+    return "💙 Gentle reminder - your health matters";
   return "⏰ Important: Medicine time approaching";
 }
 
-function getPersonalizedBeforeMessage(pillName, medication, adherenceRate, insights, profile) {
+function getPersonalizedBeforeMessage(
+  pillName,
+  medication,
+  adherenceRate,
+  insights,
+  profile,
+) {
   const remindTime = medication.dosageTimes[0]?.remindBefore || "15m";
-  
+
   // High adherence - encouraging
   if (adherenceRate >= 90) {
     const encouragement = [
       `Your ${adherenceRate}% adherence rate is excellent! ${pillName} reminder in ${remindTime}`,
       `You've been consistently taking ${pillName}. Reminder in ${remindTime} 🌟`,
-      `Great job staying on track! ${pillName} coming up in ${remindTime}`
+      `Great job staying on track! ${pillName} coming up in ${remindTime}`,
     ];
     return encouragement[Math.floor(Math.random() * encouragement.length)];
   }
-  
+
   // Medium adherence - motivational
   if (adherenceRate >= 70) {
     return `Building healthy habits! ${pillName} reminder in ${remindTime}. You're at ${adherenceRate}% adherence 💪`;
   }
-  
+
   // Low adherence - supportive
-  if (insights.mood === 'negative' || insights.symptoms.length > 0) {
+  if (insights.mood === "negative" || insights.symptoms.length > 0) {
     return `Taking care of yourself is important. ${pillName} reminder in ${remindTime}. You've got this! 💙`;
   }
-  
+
   // Complex regimen - helpful
-  if (profile.complexity === 'complex') {
+  if (profile.complexity === "complex") {
     return `Managing ${profile.medicationCount} medications is tough! ${pillName} reminder in ${remindTime} 🎯`;
   }
-  
+
   return `${pillName} reminder in ${remindTime}. Every dose counts toward your health goals! 🌱`;
 }
 
-// 💊 Personalized ON-TIME reminder messages  
+// 💊 Personalized ON-TIME reminder messages
 function getPersonalizedOnTimeTitle(adherenceRate, insights) {
   if (adherenceRate >= 90) return "💊 Time for your medicine, champion!";
-  if (insights.symptoms.includes('pain')) return "💊 Pain relief time - your medicine is ready";
-  if (insights.mood === 'positive') return "💊 Medicine time - keep that positive momentum!";
+  if (insights.symptoms.includes("pain"))
+    return "💊 Pain relief time - your medicine is ready";
+  if (insights.mood === "positive")
+    return "💊 Medicine time - keep that positive momentum!";
   return "💊 It's medicine time";
 }
 
-function getPersonalizedOnTimeMessage(pillName, adherenceRate, insights, timeStr) {
+function getPersonalizedOnTimeMessage(
+  pillName,
+  adherenceRate,
+  insights,
+  timeStr,
+) {
   // Symptom-specific messages
-  if (insights.symptoms.includes('pain')) {
+  if (insights.symptoms.includes("pain")) {
     return `Time for ${pillName} - this should help with your pain management 🩹`;
   }
-  if (insights.symptoms.includes('fatigue')) {
+  if (insights.symptoms.includes("fatigue")) {
     return `${pillName} time! This may help with your energy levels ⚡`;
   }
-  
+
   // Mood-based messages
-  if (insights.mood === 'positive') {
+  if (insights.mood === "positive") {
     return `${pillName} at ${timeStr}. Love how you're taking charge of your health! ✨`;
   }
-  if (insights.mood === 'negative') {
+  if (insights.mood === "negative") {
     return `${pillName} time. Small steps, big progress. You're worth the care 💙`;
   }
-  
+
   // Adherence-based messages
   if (adherenceRate >= 90) {
     return `${pillName} at ${timeStr}. Your consistency is inspiring! 🌟`;
@@ -316,14 +391,16 @@ function getPersonalizedOnTimeMessage(pillName, adherenceRate, insights, timeStr
   if (adherenceRate >= 70) {
     return `${pillName} at ${timeStr}. Building those healthy habits! 💪`;
   }
-  
+
   return `Time for ${pillName} at ${timeStr}. Your health journey matters! 🌱`;
 }
 
 // ❗ Personalized AFTER (missed dose) messages
 function getPersonalizedAfterTitle(adherenceStats, insights) {
-  if (adherenceStats.missed > 2) return "❗ Multiple missed doses - let's get back on track";
-  if (insights.mood === 'negative') return "💙 Gentle check-in about your medicine";
+  if (adherenceStats.missed > 2)
+    return "❗ Multiple missed doses - let's get back on track";
+  if (insights.mood === "negative")
+    return "💙 Gentle check-in about your medicine";
   return "❗ Did you miss your medicine?";
 }
 
@@ -332,18 +409,20 @@ function getPersonalizedAfterMessage(pillName, adherenceStats, insights) {
   if (adherenceStats.missed > 2) {
     return `${pillName} - I notice you've missed a few doses lately. Is everything okay? Your health team is here to help 💙`;
   }
-  
+
   // Mood-sensitive messaging
-  if (insights.mood === 'negative') {
+  if (insights.mood === "negative") {
     return `${pillName} - it's okay if you missed it. Tomorrow is a fresh start. Your wellbeing matters 🌱`;
   }
-  
+
   // Encouraging recovery
   if (adherenceStats.total > 0) {
-    const rate = Math.round((adherenceStats.taken / adherenceStats.total) * 100);
+    const rate = Math.round(
+      (adherenceStats.taken / adherenceStats.total) * 100,
+    );
     return `${pillName} - you're usually good at ${rate}% adherence. Just a gentle reminder to get back on track! 🎯`;
   }
-  
+
   return `${pillName} - did you forget? No worries, it happens! Consider setting a phone alarm for tomorrow 📱`;
 }
 
@@ -351,21 +430,20 @@ function getPersonalizedAfterMessage(pillName, adherenceStats, insights) {
 function getBasicNotification(type, medication) {
   const basic = {
     before: {
-      title: "Medicine Reminder ⏰", 
-      message: `Take ${medication.pillName} soon`
+      title: "Medicine Reminder ⏰",
+      message: `Take ${medication.pillName} soon`,
     },
     onTime: {
-      title: "Time to Take Medicine 💊", 
-      message: `Take ${medication.pillName} now`
+      title: "Time to Take Medicine 💊",
+      message: `Take ${medication.pillName} now`,
     },
     after: {
-      title: "Missed Dose ❗", 
-      message: `Did you forget ${medication.pillName}?`
-    }
+      title: "Missed Dose ❗",
+      message: `Did you forget ${medication.pillName}?`,
+    },
   };
   return basic[type] || basic.onTime;
 }
-
 
 const scheduleReminders = new Set();
 
@@ -373,7 +451,7 @@ const scheduleReminders = new Set();
 export default async function startNotificationScheduler(user) {
   console.log("📅 Starting daily medication notification scheduler...");
   let userId;
-  
+
   if (user?.user?.id) {
     // if called from login (wrapped object)
     userId = user.user.id.toString();
@@ -384,12 +462,14 @@ export default async function startNotificationScheduler(user) {
     console.error("Invalid user object passed to scheduler:", user);
     return; // exit if user is invalid
   }
-  
+
   console.log("User id:", userId);
 
   // 🧹 Clear any existing timers for this user to prevent duplicates
   clearUserTimers(userId);
-  console.log(`🔄 Restarting scheduler for user ${userId} - existing timers cleared`);
+  console.log(
+    `🔄 Restarting scheduler for user ${userId} - existing timers cleared`,
+  );
 
   try {
     const today = new Date();
@@ -418,51 +498,70 @@ export default async function startNotificationScheduler(user) {
         const medTime = getTimeForToday(dose.time);
         const beforeMs = medTime.getTime() - parseDuration(dose.remindBefore);
         if (beforeMs < Date.now()) {
-          console.log(`⏭️ Skipping PAST reminder for ${med.pillName} at ${new Date(beforeMs).toLocaleTimeString()}`);
+          console.log(
+            `⏭️ Skipping PAST reminder for ${med.pillName} at ${new Date(beforeMs).toLocaleTimeString()}`,
+          );
           return; // skip past times
         }
-        
+
         // BEFORE reminder
         if (beforeMs > Date.now()) {
           const beforeTime = new Date(beforeMs);
-          const reminderKey = getReminderKey(userId, med._id, beforeTime, 'before');
-          
+          const reminderKey = getReminderKey(
+            userId,
+            med._id,
+            beforeTime,
+            "before",
+          );
+
           // ✅ Check if already scheduled in memory
           if (scheduledReminders.has(reminderKey)) {
-            console.log(`⏭️ Skipping duplicate BEFORE reminder: ${reminderKey}`);
+            console.log(
+              `⏭️ Skipping duplicate BEFORE reminder: ${reminderKey}`,
+            );
             return;
           }
-          
+
           // ✅ Check if already sent in database
-          if (dose.lastReminderSentAt && dose.lastReminderSentAt >= beforeTime) {
-            console.log(`⏭️ BEFORE reminder already sent at ${dose.lastReminderSentAt}`);
+          if (
+            dose.lastReminderSentAt &&
+            dose.lastReminderSentAt >= beforeTime
+          ) {
+            console.log(
+              `⏭️ BEFORE reminder already sent at ${dose.lastReminderSentAt}`,
+            );
             return;
           }
-          
+
           // Mark as scheduled
           scheduledReminders.add(reminderKey);
-          
+
           const timerId = setTimeout(async () => {
             try {
               // 🎯 Generate personalized notification
               const personalizedNotif = await generatePersonalizedNotification(
-                userId, med, 'before', medTime
+                userId,
+                med,
+                "before",
+                medTime,
               );
-              
+
               sendNotification(
                 personalizedNotif.title,
                 personalizedNotif.message,
                 userId,
-                "before"
+                "before",
               );
-              
+
               // 🆕 Mark as sent in database
               await Medication.updateOne(
                 { _id: med._id, "dosageTimes.time": dose.time },
-                { $set: { "dosageTimes.$.lastReminderSentAt": new Date() } }
+                { $set: { "dosageTimes.$.lastReminderSentAt": new Date() } },
               );
-              
-              console.log(`✅ BEFORE reminder sent and logged for ${med.pillName}`);
+
+              console.log(
+                `✅ BEFORE reminder sent and logged for ${med.pillName}`,
+              );
             } catch (error) {
               console.error(`❌ Error sending BEFORE reminder:`, error);
             }
@@ -470,9 +569,12 @@ export default async function startNotificationScheduler(user) {
 
           // 💾 Save to DB with personalized message
           const personalizedNotif = await generatePersonalizedNotification(
-            userId, med, 'before', medTime
+            userId,
+            med,
+            "before",
+            medTime,
           );
-          
+
           await Notification.findOneAndUpdate(
             { userId, date: todayDate },
             {
@@ -488,56 +590,70 @@ export default async function startNotificationScheduler(user) {
                 },
               },
             },
-            { upsert: true, new: true }
+            { upsert: true, new: true },
           );
-          
+
           // Track the timer
           addUserTimer(userId, timerId);
-          console.log(`⏰ Scheduled PERSONALIZED BEFORE reminder for ${med.pillName} at ${beforeTime.toLocaleTimeString()}`);
+          console.log(
+            `⏰ Scheduled PERSONALIZED BEFORE reminder for ${med.pillName} at ${beforeTime.toLocaleTimeString()}`,
+          );
         }
 
-
-  
         // ON-TIME reminder
         if (medTime.getTime() > Date.now()) {
-          const reminderKey = getReminderKey(userId, med._id, medTime, 'onTime');
-          
+          const reminderKey = getReminderKey(
+            userId,
+            med._id,
+            medTime,
+            "onTime",
+          );
+
           // ✅ Check if already scheduled in memory
           if (scheduledReminders.has(reminderKey)) {
-            console.log(`⏭️ Skipping duplicate ON-TIME reminder: ${reminderKey}`);
+            console.log(
+              `⏭️ Skipping duplicate ON-TIME reminder: ${reminderKey}`,
+            );
             return;
           }
-          
+
           // ✅ Check if already sent in database
           if (dose.lastReminderSentAt && dose.lastReminderSentAt >= medTime) {
-            console.log(`⏭️ ON-TIME reminder already sent at ${dose.lastReminderSentAt}`);
+            console.log(
+              `⏭️ ON-TIME reminder already sent at ${dose.lastReminderSentAt}`,
+            );
             return;
           }
-          
+
           // Mark as scheduled
           scheduledReminders.add(reminderKey);
-          
+
           const timerId = setTimeout(async () => {
             try {
               // 🎯 Generate personalized notification
               const personalizedNotif = await generatePersonalizedNotification(
-                userId, med, 'onTime', medTime
+                userId,
+                med,
+                "onTime",
+                medTime,
               );
-              
+
               sendNotification(
                 personalizedNotif.title,
                 personalizedNotif.message,
                 userId,
-                "onTime"
+                "onTime",
               );
-              
+
               // 🆕 Mark as sent in database
               await Medication.updateOne(
                 { _id: med._id, "dosageTimes.time": dose.time },
-                { $set: { "dosageTimes.$.lastReminderSentAt": new Date() } }
+                { $set: { "dosageTimes.$.lastReminderSentAt": new Date() } },
               );
-              
-              console.log(`✅ ON-TIME reminder sent and logged for ${med.pillName}`);
+
+              console.log(
+                `✅ ON-TIME reminder sent and logged for ${med.pillName}`,
+              );
             } catch (error) {
               console.error(`❌ Error sending ON-TIME reminder:`, error);
             }
@@ -545,7 +661,10 @@ export default async function startNotificationScheduler(user) {
 
           // 💾 Save to DB with personalized message
           const personalizedNotif = await generatePersonalizedNotification(
-            userId, med, 'onTime', medTime
+            userId,
+            med,
+            "onTime",
+            medTime,
           );
 
           await Notification.findOneAndUpdate(
@@ -563,56 +682,70 @@ export default async function startNotificationScheduler(user) {
                 },
               },
             },
-            { upsert: true, new: true }
+            { upsert: true, new: true },
           );
-          
+
           // Track the timer
           addUserTimer(userId, timerId);
-          console.log(`💊 Scheduled PERSONALIZED ON-TIME reminder for ${med.pillName} at ${medTime.toLocaleTimeString()}`);
+          console.log(
+            `💊 Scheduled PERSONALIZED ON-TIME reminder for ${med.pillName} at ${medTime.toLocaleTimeString()}`,
+          );
         }
 
         // AFTER reminder
         const afterMs = medTime.getTime() + parseDuration(dose.remindAfter);
         if (afterMs > Date.now()) {
           const afterTime = new Date(afterMs);
-          const reminderKey = getReminderKey(userId, med._id, afterTime, 'after');
-          
+          const reminderKey = getReminderKey(
+            userId,
+            med._id,
+            afterTime,
+            "after",
+          );
+
           // ✅ Check if already scheduled in memory
           if (scheduledReminders.has(reminderKey)) {
             console.log(`⏭️ Skipping duplicate AFTER reminder: ${reminderKey}`);
             return;
           }
-          
+
           // ✅ Check if already sent in database
           if (dose.lastReminderSentAt && dose.lastReminderSentAt >= afterTime) {
-            console.log(`⏭️ AFTER reminder already sent at ${dose.lastReminderSentAt}`);
+            console.log(
+              `⏭️ AFTER reminder already sent at ${dose.lastReminderSentAt}`,
+            );
             return;
           }
-          
+
           // Mark as scheduled
           scheduledReminders.add(reminderKey);
-          
+
           const timerId = setTimeout(async () => {
             try {
               // 🎯 Generate personalized notification
               const personalizedNotif = await generatePersonalizedNotification(
-                userId, med, 'after', medTime
+                userId,
+                med,
+                "after",
+                medTime,
               );
-              
+
               sendNotification(
                 personalizedNotif.title,
                 personalizedNotif.message,
                 userId,
-                "after"
+                "after",
               );
-              
+
               // 🆕 Mark as sent in database
               await Medication.updateOne(
                 { _id: med._id, "dosageTimes.time": dose.time },
-                { $set: { "dosageTimes.$.lastReminderSentAt": new Date() } }
+                { $set: { "dosageTimes.$.lastReminderSentAt": new Date() } },
               );
-              
-              console.log(`✅ AFTER reminder sent and logged for ${med.pillName}`);
+
+              console.log(
+                `✅ AFTER reminder sent and logged for ${med.pillName}`,
+              );
             } catch (error) {
               console.error(`❌ Error sending AFTER reminder:`, error);
             }
@@ -620,7 +753,10 @@ export default async function startNotificationScheduler(user) {
 
           // 💾 Save to DB with personalized message
           const personalizedNotif = await generatePersonalizedNotification(
-            userId, med, 'after', medTime
+            userId,
+            med,
+            "after",
+            medTime,
           );
 
           await Notification.findOneAndUpdate(
@@ -638,19 +774,26 @@ export default async function startNotificationScheduler(user) {
                 },
               },
             },
-            { upsert: true, new: true }
+            { upsert: true, new: true },
           );
-          
+
           // Track the timer
           addUserTimer(userId, timerId);
-          console.log(`❗ Scheduled PERSONALIZED AFTER reminder for ${med.pillName} at ${new Date(afterMs).toLocaleTimeString()}`);
+          console.log(
+            `❗ Scheduled PERSONALIZED AFTER reminder for ${med.pillName} at ${new Date(afterMs).toLocaleTimeString()}`,
+          );
         }
       });
     });
 
     // 🔹 Dummy test notification after 10 seconds
     const testTimerId = setTimeout(async () => {
-      sendNotification("🔔 Test Notification", "This is a dummy test alert!", userId, "test");
+      sendNotification(
+        "🔔 Test Notification",
+        "This is a dummy test alert!",
+        userId,
+        "test",
+      );
 
       await Notification.findOneAndUpdate(
         { userId, date: todayDate },
@@ -665,18 +808,19 @@ export default async function startNotificationScheduler(user) {
             },
           },
         },
-        { upsert: true, new: true }
+        { upsert: true, new: true },
       );
     }, 10 * 1000);
-    
+
     // Track the test timer
     addUserTimer(userId, testTimerId);
     console.log(`🧪 Scheduled TEST notification in 10 seconds`);
 
     // Summary log
     const userTimers = activeTimers.get(userId);
-    console.log(`✅ Total ${userTimers ? userTimers.size : 0} notifications scheduled for user ${userId}`);
-
+    console.log(
+      `✅ Total ${userTimers ? userTimers.size : 0} notifications scheduled for user ${userId}`,
+    );
   } catch (err) {
     console.error("Error scheduling notifications:", err);
   }
@@ -688,20 +832,21 @@ export async function getTodaysNotifications(userOrId) {
     // normalize input to userId string
     let userId = null;
     if (!userOrId) return [];
-    if (typeof userOrId === 'string') userId = userOrId;
+    if (typeof userOrId === "string") userId = userOrId;
     else if (userOrId.id) userId = String(userOrId.id);
-    else if (userOrId.user && userOrId.user.id) userId = String(userOrId.user.id);
+    else if (userOrId.user && userOrId.user.id)
+      userId = String(userOrId.user.id);
     if (!userId) return [];
 
     const today = new Date();
-    const todayDate = today.toISOString().split('T')[0];
+    const todayDate = today.toISOString().split("T")[0];
 
     const doc = await Notification.findOne({ userId, date: todayDate }).lean();
     if (!doc) return [];
     // return the notifications array (each has title, message, time, etc.)
     return doc.notifications || [];
   } catch (err) {
-    console.error('Error in getTodaysNotifications:', err);
+    console.error("Error in getTodaysNotifications:", err);
     return [];
   }
 }
@@ -709,12 +854,258 @@ export async function getTodaysNotifications(userOrId) {
 // Express handler: expects { localuser } or { userId } in req.body
 export async function getTodaysNotificationsHandler(req, res) {
   try {
-    console.log('getTodaysNotificationsHandler body:', JSON.stringify(req.body));
+    console.log(
+      "getTodaysNotificationsHandler body:",
+      JSON.stringify(req.body),
+    );
     const { localuser, userId } = req.body || {};
     const data = await getTodaysNotifications(localuser || userId);
-    return res.status(200).json({ success: true, message: 'Today notifications fetched', data });
+    return res
+      .status(200)
+      .json({ success: true, message: "Today notifications fetched", data });
   } catch (err) {
-    console.error('Error in getTodaysNotificationsHandler:', err);
-    return res.status(500).json({ success: false, message: 'Server error', error: err.message });
+    console.error("Error in getTodaysNotificationsHandler:", err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error", error: err.message });
+  }
+}
+
+// ===========================================
+// SNOOZE FUNCTIONALITY
+// ===========================================
+
+// Snooze a specific notification
+export async function snoozeNotificationHandler(req, res) {
+  try {
+    const { notificationId, snoozeMinutes, userId } = req.body;
+
+    if (!notificationId || !snoozeMinutes || !userId) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Missing required fields: notificationId, snoozeMinutes, userId",
+      });
+    }
+
+    // Validate snooze minutes (5, 15, 30, 60)
+    const validSnoozeMinutes = [5, 15, 30, 60];
+    if (!validSnoozeMinutes.includes(parseInt(snoozeMinutes))) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid snooze duration. Allowed: 5, 15, 30, 60 minutes",
+      });
+    }
+
+    const result = await snoozeNotification(
+      notificationId,
+      parseInt(snoozeMinutes),
+      userId,
+    );
+
+    if (result.success) {
+      return res.status(200).json(result);
+    } else {
+      return res.status(400).json(result);
+    }
+  } catch (err) {
+    console.error("Error in snoozeNotificationHandler:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+}
+
+// Check and re-trigger snoozed notifications
+export async function checkSnoozedNotificationsHandler(req, res) {
+  try {
+    const result = await checkAndTriggerSnoozedNotifications();
+    return res.status(200).json({
+      success: true,
+      message: "Snoozed notifications checked",
+      triggered: result,
+    });
+  } catch (err) {
+    console.error("Error in checkSnoozedNotificationsHandler:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+}
+
+// Core snooze logic
+async function snoozeNotification(notificationId, snoozeMinutes, userId) {
+  try {
+    const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD format
+
+    // Find the notification document for today
+    const doc = await Notification.findOne({ userId, date: today });
+
+    if (!doc) {
+      return { success: false, message: "No notifications found for today" };
+    }
+
+    // Find the specific notification in the array
+    const notification = doc.notifications.id(notificationId);
+
+    if (!notification) {
+      return { success: false, message: "Notification not found" };
+    }
+
+    // Check if already snoozed too many times
+    if (notification.snoozeCount >= notification.maxSnoozes) {
+      return {
+        success: false,
+        message: `Maximum snoozes (${notification.maxSnoozes}) reached for this notification`,
+      };
+    }
+
+    // Calculate snooze time
+    const snoozeUntil = new Date(Date.now() + snoozeMinutes * 60 * 1000);
+
+    // Store original time if first snooze
+    if (!notification.originalTime) {
+      notification.originalTime = notification.time;
+    }
+
+    // Update notification with snooze data
+    notification.isSnoozed = true;
+    notification.snoozeUntil = snoozeUntil;
+    notification.snoozeCount += 1;
+
+    await doc.save();
+
+    // Schedule the notification to re-trigger
+    scheduleSnoozeNotification(notification, userId, snoozeMinutes);
+
+    console.log(
+      `✅ Notification ${notificationId} snoozed for ${snoozeMinutes} minutes until ${snoozeUntil}`,
+    );
+
+    return {
+      success: true,
+      message: `Notification snoozed for ${snoozeMinutes} minutes`,
+      snoozeUntil,
+      snoozeCount: notification.snoozeCount,
+      maxSnoozes: notification.maxSnoozes,
+    };
+  } catch (error) {
+    console.error("Error snoozing notification:", error);
+    return { success: false, message: "Failed to snooze notification" };
+  }
+}
+
+// Schedule snoozed notification to re-trigger
+function scheduleSnoozeNotification(notification, userId, snoozeMinutes) {
+  const delay = snoozeMinutes * 60 * 1000; // Convert to milliseconds
+
+  setTimeout(() => {
+    // Re-trigger the notification via Socket.IO
+    if (global.io) {
+      const snoozeMessage = {
+        id: notification._id,
+        title: `⏰ ${notification.title} (Snoozed)`,
+        message: notification.message,
+        timestamp: new Date().toISOString(),
+        type: notification.type,
+        medicineId: notification.medicineId,
+        medicineName: notification.medicineName,
+        isSnoozed: false, // Reset snooze status when re-triggered
+      };
+
+      global.io.to(`user-${userId}`).emit("notification", snoozeMessage);
+      console.log(
+        `🔔 Re-triggered snoozed notification for user ${userId}:`,
+        snoozeMessage.title,
+      );
+    }
+
+    // Update the notification in database to mark as no longer snoozed
+    updateSnoozeStatus(notification._id, userId);
+  }, delay);
+
+  console.log(
+    `⏱️ Scheduled snooze notification to re-trigger in ${snoozeMinutes} minutes`,
+  );
+}
+
+// Update notification snooze status in database
+async function updateSnoozeStatus(notificationId, userId) {
+  try {
+    const today = new Date().toLocaleDateString("en-CA");
+    const doc = await Notification.findOne({ userId, date: today });
+
+    if (doc) {
+      const notification = doc.notifications.id(notificationId);
+      if (notification) {
+        notification.isSnoozed = false;
+        notification.snoozeUntil = null;
+        await doc.save();
+      }
+    }
+  } catch (error) {
+    console.error("Error updating snooze status:", error);
+  }
+}
+
+// Check for snoozed notifications that should be re-triggered
+async function checkAndTriggerSnoozedNotifications() {
+  try {
+    const today = new Date().toLocaleDateString("en-CA");
+    const now = new Date();
+
+    console.log("🔍 Checking for expired snoozed notifications...");
+
+    // Find all documents with snoozed notifications
+    const docs = await Notification.find({
+      date: today,
+      "notifications.isSnoozed": true,
+      "notifications.snoozeUntil": { $lte: now },
+    });
+
+    let triggeredCount = 0;
+
+    for (const doc of docs) {
+      for (const notification of doc.notifications) {
+        if (
+          notification.isSnoozed &&
+          notification.snoozeUntil &&
+          notification.snoozeUntil <= now
+        ) {
+          // Re-trigger this notification
+          if (global.io) {
+            const message = {
+              id: notification._id,
+              title: `⏰ ${notification.title} (Snoozed)`,
+              message: notification.message,
+              timestamp: new Date().toISOString(),
+              type: notification.type,
+              medicineId: notification.medicineId,
+              medicineName: notification.medicineName,
+              isSnoozed: false,
+            };
+
+            global.io.to(`user-${doc.userId}`).emit("notification", message);
+            triggeredCount++;
+          }
+
+          // Update status
+          notification.isSnoozed = false;
+          notification.snoozeUntil = null;
+        }
+      }
+
+      await doc.save();
+    }
+
+    console.log(`🔔 Re-triggered ${triggeredCount} snoozed notifications`);
+    return triggeredCount;
+  } catch (error) {
+    console.error("Error checking snoozed notifications:", error);
+    return 0;
   }
 }

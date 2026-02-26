@@ -9,7 +9,6 @@ import { sendOTPEmail } from "../services/emailService.js";
 
 const router = express.Router();
 
-
 // Signup
 router.post("/signup", async (req, res) => {
   try {
@@ -30,7 +29,7 @@ router.post("/signup", async (req, res) => {
       password: hashedPassword,
       otpCode: otp,
       otpExpiresAt,
-      isVerified: false
+      isVerified: false,
     });
 
     await user.save();
@@ -41,9 +40,10 @@ router.post("/signup", async (req, res) => {
     }
 
     res.status(201).json({
-      message: "User registered successfully. Please verify your email with the OTP sent.",
+      message:
+        "User registered successfully. Please verify your email with the OTP sent.",
       requiresVerification: true,
-      email: user.email
+      email: user.email,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -53,7 +53,6 @@ router.post("/signup", async (req, res) => {
 // Login
 router.post("/login", async (req, res) => {
   try {
-
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
@@ -63,25 +62,32 @@ router.post("/login", async (req, res) => {
       return res.status(403).json({
         message: "Please verify your account first",
         requiresVerification: true,
-        email: user.email
+        email: user.email,
       });
     }
 
     if (!user.password) {
-      return res.status(400).json({ message: "This account was created with Google. Please use Google Login." });
+      return res.status(400).json({
+        message:
+          "This account was created with Google. Please use Google Login.",
+      });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+    if (!isMatch)
+      return res.status(400).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
-    console.log("user at login", user)
-    startNotificationScheduler({ user: { id: user._id, name: user.name, email: user.email } }); // Start scheduler for the new user
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email } });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1d",
+    });
+    console.log("user at login", user);
+    startNotificationScheduler({
+      user: { id: user._id, name: user.name, email: user.email },
+    }); // Start scheduler for the new user
+    res.json({
+      token,
+      user: { id: user._id, name: user.name, email: user.email },
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -95,25 +101,32 @@ router.post("/verify-otp", async (req, res) => {
 
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    if (user.isVerified) return res.status(400).json({ message: "User already verified" });
+    if (user.isVerified)
+      return res.status(400).json({ message: "User already verified" });
 
     if (user.otpCode !== otp) {
       user.otpRetryCount += 1;
       await user.save();
 
       if (user.otpRetryCount >= 5) {
-        return res.status(400).json({ message: "Too many failed attempts. Please request a new OTP." });
+        return res.status(400).json({
+          message: "Too many failed attempts. Please request a new OTP.",
+        });
       }
 
       return res.status(400).json({ message: "Invalid OTP" });
     }
 
     if (new Date() > user.otpExpiresAt) {
-      return res.status(400).json({ message: "OTP expired. Please request a new one." });
+      return res
+        .status(400)
+        .json({ message: "OTP expired. Please request a new one." });
     }
 
     // Generate backup codes on first verification
-    const backupCodes = Array.from({ length: 5 }, () => Math.random().toString(36).substring(2, 10).toUpperCase());
+    const backupCodes = Array.from({ length: 5 }, () =>
+      Math.random().toString(36).substring(2, 10).toUpperCase(),
+    );
     user.isVerified = true;
     user.otpCode = null;
     user.otpExpiresAt = null;
@@ -121,19 +134,19 @@ router.post("/verify-otp", async (req, res) => {
     user.backupCodes = backupCodes;
     await user.save();
 
-    startNotificationScheduler({ user: { id: user._id, name: user.name, email: user.email } });
+    startNotificationScheduler({
+      user: { id: user._id, name: user.name, email: user.email },
+    });
 
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1d",
+    });
 
     res.json({
       message: "Account verified successfully",
       token,
       user: { id: user._id, name: user.name, email: user.email },
-      backupCodes // Return these once so the user can save them
+      backupCodes, // Return these once so the user can save them
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -147,7 +160,8 @@ router.post("/resend-otp", async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) return res.status(404).json({ message: "User not found" });
-    if (user.isVerified) return res.status(400).json({ message: "User already verified" });
+    if (user.isVerified)
+      return res.status(400).json({ message: "User already verified" });
 
     const otp = generateOTP();
     const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
@@ -189,7 +203,7 @@ router.post("/google", async (req, res) => {
         name,
         email,
         googleId,
-        isVerified: true // Google users are verified by default
+        isVerified: true, // Google users are verified by default
       });
       await user.save();
     } else if (!user.googleId) {
@@ -199,14 +213,17 @@ router.post("/google", async (req, res) => {
       await user.save();
     }
 
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1d",
+    });
 
-    startNotificationScheduler({ user: { id: user._id, name: user.name, email: user.email } });
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email, picture } });
+    startNotificationScheduler({
+      user: { id: user._id, name: user.name, email: user.email },
+    });
+    res.json({
+      token,
+      user: { id: user._id, name: user.name, email: user.email, picture },
+    });
   } catch (err) {
     console.error("Google verify error:", err);
     res.status(400).json({ message: "Invalid Google token" });
