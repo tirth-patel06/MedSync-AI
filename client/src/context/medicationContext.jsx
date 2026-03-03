@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
-import apiClient from "../services/api/client";
+import { apiClient } from "../services/api/client";
 
 const MedicineContext = createContext();
 
