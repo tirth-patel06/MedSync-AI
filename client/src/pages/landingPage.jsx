@@ -20,6 +20,11 @@ export default function LandingPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // Helper: extracts token from various possible response shapes
+  const extractToken = (data) => {
+    return data.token || data.accessToken || data.jwt || data.data?.token || null;
+  };
+
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -28,18 +33,28 @@ export default function LandingPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: form.email, password: form.password })
       });
-      
+
       const data = await res.json();
-      
-      if (res.error || !data.token) {
+
+      // FIX 1: was `res.error` (always undefined) — now correctly uses `!res.ok`
+      if (!res.ok) {
         alert("Login failed: " + (data.message || "Invalid credentials"));
         return;
       }
-      
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      console.log("Login successful:", JSON.stringify(data.user));
-      console.log("local user",JSON.parse(localStorage.getItem("user")))
+
+      // FIX 2: safely extract token regardless of response shape
+      const token = extractToken(data);
+      if (!token) {
+        console.error("No token found in response. Keys received:", Object.keys(data));
+        alert("Login failed: Server did not return a token.");
+        return;
+      }
+
+      // FIX 3: store raw token (no "Bearer " prefix) — prefix is added at request time
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(data.user ?? {}));
+
+      console.log("Login successful:", data.user);
       navigate("/dashboard");
     } catch (error) {
       alert("Login failed: " + error.message);
@@ -54,18 +69,27 @@ export default function LandingPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      
+
       const data = await res.json();
-      
+
       if (!res.ok) {
         alert("Signup failed: " + (data.message || "Please try again"));
         return;
       }
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+
+      // FIX 2 (same): safely extract token
+      const token = extractToken(data);
+      if (!token) {
+        console.error("No token found in signup response. Keys received:", Object.keys(data));
+        alert("Signup failed: Server did not return a token.");
+        return;
+      }
+
+      // FIX 3 (same): store raw token only
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(data.user ?? {}));
 
       console.log("Signup successful:", data.user);
-      
       alert("Account created successfully! Please complete your health profile.");
       navigate("/health");
     } catch (error) {

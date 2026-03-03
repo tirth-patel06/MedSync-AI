@@ -17,7 +17,23 @@ export const SocketProvider = ({ children }) => {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    // Connect to WebSocket server
+    // ── JWT guard ────────────────────────────────────────────────────────
+    // Don't attempt a socket connection without a valid token —
+    // this is what caused the WebSocket auth errors.
+    const token = localStorage.getItem("token");
+    const tokenValid =
+      token &&
+      token !== "null" &&
+      token !== "undefined" &&
+      token.trim() !== "";
+
+    if (!tokenValid) {
+      console.warn("SocketProvider: no valid token found, skipping connection.");
+      return;
+    }
+    // ────────────────────────────────────────────────────────────────────
+
+    // Connect to WebSocket server (token is read inside socketService.connect)
     socketService.connect();
 
     // Listen for connection status changes
@@ -52,7 +68,7 @@ export const SocketProvider = ({ children }) => {
       unsubscribe();
       socketService.disconnect();
     };
-  }, []);
+  }, []); // re-runs on mount; token is checked at that point
 
   // Request notification permission on mount
   useEffect(() => {
