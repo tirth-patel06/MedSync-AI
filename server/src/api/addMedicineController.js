@@ -20,26 +20,21 @@ export const addMedication = async (req, res) => {
       prescriptionId,
       adherenceHistory,
       notes,
-      overrideInteractionWarning = false, // ← user explicitly chose to proceed despite warning
+      overrideInteractionWarning = false,
     } = medication;
 
-    // ─── SAFETY SHIELD: Drug Interaction Check ───────────────────────────────
-    // Fetch user's existing medications to compare against
+    // ─── SAFETY SHIELD ────────────────────────────────────────────────────────
     const existingMedications = await Medication.find({ userId: localuser.id }).select("pillName");
     const existingNames = existingMedications.map((m) => m.pillName);
 
     if (existingNames.length > 0 && !overrideInteractionWarning) {
       const interactionResult = await checkDrugInteractions(pillName, existingNames);
-
       if (!interactionResult.safe) {
         const hasMajor = interactionResult.highestSeverity === "major";
-
-        // Major interactions: blocked by default, requires explicit override
-        // Moderate/Minor: warn but allow override
         return res.status(409).json({
           success: false,
           interactionDetected: true,
-          blocked: hasMajor,           // true = frontend should make override harder
+          blocked: hasMajor,
           highestSeverity: interactionResult.highestSeverity,
           interactions: interactionResult.interactions,
           message: hasMajor
@@ -50,11 +45,10 @@ export const addMedication = async (req, res) => {
     }
     // ─────────────────────────────────────────────────────────────────────────
 
-    // 🌐 Auto-translate pillDescription to Spanish and Hindi
+    // 🌐 Auto-translate pillDescription
     let translatedInstructions = {};
     if (pillDescription && pillDescription.trim().length > 0) {
       try {
-        console.log("🌐 Translating medication instructions...");
         const translations = await translationService.translateBatch(
           [pillDescription, pillDescription],
           ["es", "hi"],
@@ -64,7 +58,6 @@ export const addMedication = async (req, res) => {
           es: translations[0] || pillDescription,
           hi: translations[1] || pillDescription,
         };
-        console.log("✅ Translated instructions:", translatedInstructions);
       } catch (translationError) {
         console.error("⚠️ Translation failed, storing original only:", translationError);
         translatedInstructions = { es: pillDescription, hi: pillDescription };
@@ -91,15 +84,13 @@ export const addMedication = async (req, res) => {
 
     await sampleMedicine.save();
 
-    // Schedule in Google Calendar
-    let calendarSyncStatus;
+    let calendarSyncStatus = { synced: false };
     try {
       calendarSyncStatus = await addMedicineToGoogleCalendar(localuser.id, sampleMedicine);
     } catch (calendarError) {
       console.error(`[Add Medicine] Google Calendar sync failed:`, calendarError.message);
       try {
         await Medication.findByIdAndDelete(sampleMedicine._id);
-        console.log(`[Add Medicine] Rolled back medication ${sampleMedicine._id}`);
       } catch (rollbackError) {
         console.error("[Add Medicine] Failed to roll back medication:", rollbackError);
       }
@@ -110,7 +101,6 @@ export const addMedication = async (req, res) => {
       });
     }
 
-    // ✅ Restart notification scheduler
     startNotificationScheduler({
       user: { id: localuser.id, name: localuser.name, email: localuser.email },
     });
@@ -132,27 +122,43 @@ export const addMedication = async (req, res) => {
 };
 
 /**
- * Standalone endpoint: check interactions without saving
- * Used by frontend for real-time preview as user types the drug name
+ * FIX 7 & 8: Use req.user from authMiddleware instead of trusting localuser from body
+ * FIX 6: Always return full response shape including highestSeverity and source
  * POST /api/medicine/check-interactions
  */
 export const checkInteractions = async (req, res) => {
   try {
-    const { pillName, localuser } = req.body;
+    const { pillName } = req.body;
 
     if (!pillName?.trim()) {
       return res.status(400).json({ success: false, message: "pillName is required" });
     }
 
-    const existingMedications = await Medication.find({ userId: localuser.id }).select("pillName");
+    // FIX 7 & 8: Derive user from authenticated context — never trust request body for userId
+    const authUser = req.user;
+    if (!authUser) {
+      return res.status(401).json({ success: false, message: "Authentication required" });
+    }
+    const userId = authUser.id || authUser._id;
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "Authenticated user is missing an id" });
+    }
+
+    const existingMedications = await Medication.find({ userId }).select("pillName");
     const existingNames = existingMedications.map((m) => m.pillName);
 
+    // FIX 6: Always return full schema even when no existing meds
     if (existingNames.length === 0) {
-      return res.status(200).json({ success: true, safe: true, interactions: [] });
+      return res.status(200).json({
+        success: true,
+        safe: true,
+        interactions: [],
+        highestSeverity: "none",
+        source: "none",
+      });
     }
 
     const result = await checkDrugInteractions(pillName, existingNames);
-
     return res.status(200).json({ success: true, ...result });
   } catch (error) {
     console.error("[SafetyShield] checkInteractions error:", error);

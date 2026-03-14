@@ -3,6 +3,7 @@ import { addMedication, checkInteractions } from '../api/addMedicineController.j
 import { todaysMedication } from '../api/todaysMedicineController.js';
 import { medicineStatus } from '../api/statusMedicineController.js';
 import { bulkAddMedicine } from '../api/bulkMedicineController.js';
+import authMiddleware from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
@@ -11,7 +12,7 @@ router.post('/bulk', bulkAddMedicine);
 router.post('/today', todaysMedication);
 router.post('/status', medicineStatus);
 
-// Safety Shield: check interactions without saving (for real-time frontend preview)
-router.post('/check-interactions', checkInteractions);
+// FIX 8 & 9: Protected with authMiddleware — user derived from JWT, not request body
+router.post('/check-interactions', authMiddleware, checkInteractions);
 
 export default router;
