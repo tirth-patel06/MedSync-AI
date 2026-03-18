@@ -1,61 +1,61 @@
-# MedSync AI
+# 💊 MedSync AI
 
-A full-stack, open-source medication adherence assistant that combines a modern React frontend with an Express.js backend, AI health agents, notifications, and report analysis. Built for real-world usability and ready for contributors through Social Winter of Code.
+A full-stack, open-source medication adherence assistant that combines a modern React frontend with an Express.js backend, AI health agents, real-time notifications, and multilingual report analysis. 
+
+Built for real-world usability to tackle the global issue of medication non-adherence.
+
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
 ## 📢 Announcements & Updates
 
-All important project updates, rules, and timelines are shared in the  
-**GitHub Discussions → Announcements** section.
+All important project updates, rules, and timelines are shared in the **GitHub Discussions → Announcements** section.
 
 ➡️ Please make sure to check it regularly.
 
 ---
 
-## 🚀 Why this project & how to contribute
+## ✨ Core Features & Recent Updates
 
-- **Open for contributors:** We welcome newcomers and experienced contributors alike. Good first issues, docs improvements, and feature work are all appreciated.
-- **Real impact:** Medication non-adherence affects health outcomes globally. MedSync AI provides reminders, scheduling, AI guidance, and health report analysis to help users stay on track.
-- **Modern stack:** React + Vite + Tailwind on the frontend; Node.js + Express + MongoDB + Socket.IO + LangChain integrations on the backend.
-- **Clear pathways:** Pick an issue, discuss in comments, and submit a PR. If you’re unsure where to start, open a discussion or ask for guidance.
+Thanks to our amazing community, MedSync AI is packed with cutting-edge health-tech features:
 
----
+* **Secure Auth & Dashboard:** JWT-based signup/login. View today’s meds, adherence stats, and streaks at a glance.
+* **Medication Management:** Add, update, and track medications. Support for **Bulk Medicine Input** and scheduling.
+* **⚠️ Drug Interaction Checker:** Automatically checks for potential conflicts between medications to ensure patient safety.
+* **🤖 AI Health Agents:** Multi-agent chat for medication info, health guidance, and triage powered by LangChain + LLMs (Groq/Gemini).
+* **📄 Report Analysis & Chat:** Upload medical PDFs to get AI-driven insights, and chat interactively with your analyzed reports.
+* **📅 Google Calendar Sync:** Seamlessly push your medication schedules directly to your Google Calendar.
+* **📶 Offline Support & Sync:** Built-in action queuing and offline database support so users never miss a beat, even with a poor connection.
+* **🔔 Real-Time Notifications:** Push alerts and reminders powered by Socket.IO and automated email services.
 
-## 🧭 Project overview
+### 🌍 Comprehensive Multilingual & Accessibility System
+MedSync AI features a robust translation and accessibility engine to support diverse users:
 
-MedSync AI is a monorepo with two main parts:
-
-- **client/** — React app (Vite, Tailwind) for the user experience: auth, dashboard, medication management, notifications, AI agents, report upload/chat, Google Calendar sync.
-- **server/** — Express.js API with JWT auth, medication CRUD, notification scheduling (with Socket.IO), AI agent endpoints (LangChain, Groq/Gemini), PDF parsing, and Google Calendar integration.
-
-High-level flow:
-1. User authenticates (JWT).
-2. Frontend fetches schedule/adherence stats and displays a dashboard.
-3. Users add/update medications; backend stores via MongoDB.
-4. Scheduler/Socket.IO delivers reminders and notifications.
-5. AI agents answer health/medication questions via LangChain + LLMs.
-6. Users upload reports, get AI analysis, and chat with analyzed reports.
-7. Optional Google Calendar sync for medication schedules.
+* **Native Language Support:** Full UI and AI translation for English (`en`), Spanish (`es`), and Hindi (`hi`).
+* **Auto-Translation:** Medication instructions and AI report analyses are automatically translated into the user's preferred language, preserving critical medical terminology.
+* **Readability Checker (Flesch-Kincaid):** Analyzes the complexity of medical texts, scores them (Green/Yellow/Red), and provides actionable simplification suggestions to ensure patients understand their health data.
 
 ---
 
-## 🧩 Tech stack
+## 🧩 Tech Stack
 
-**Frontend**
-- React (Vite), Tailwind CSS, React Router
-- Axios, React Context API
-- Socket.IO Client, Recharts, Lucide React
+**Frontend (client/)**
+* React (Vite), Tailwind CSS, React Router
+* Axios, React Context API
+* Socket.IO Client, Recharts, Lucide React
 
-**Backend**
-- Node.js, Express.js
-- MongoDB + Mongoose
-- JWT auth, bcrypt
-- LangChain with Groq/Gemini (LLMs)
-- Socket.IO for real-time notifications
-- Multer + pdf-parse for uploads and parsing
-- Google Calendar API (OAuth2)
-- dotenv for config
+**Backend (server/)**
+* Node.js, Express.js
+* MongoDB + Mongoose
+* JWT Auth, bcrypt
+* LangChain with Groq/Gemini (LLMs)
+* Socket.IO for real-time notifications
+* Google Calendar API (OAuth2)
+* Translation APIs & custom Medical Readability utilities
+
+*(For a deep dive into the system architecture, please see [ARCHITECTURE.md](./ARCHITECTURE.md))*
 
 ---
 
@@ -550,6 +550,28 @@ Need ideas?
 
 ---
 
+## 🎉 Social Winter of Code (SWOC) - Thank You!
+
+We are incredibly proud to announce that the Social Winter of Code phase for MedSync AI has officially concluded!
+
+A massive **THANK YOU** to every single contributor who participated. Because of your hard work, late-night commits, and brilliant ideas, MedSync AI transformed from a baseline concept into a feature-rich, multilingual, offline-capable application. You tackled complex issues like integrating AI agents, building the Flesch-Kincaid readability checkers, designing the multilingual schemas, and setting up real-time WebSockets.
+
+You have all made a real impact in building an open-source tool that can genuinely help improve global medication adherence. We couldn't have done it without you! 🚀
+
+---
+
+## 💖 Contributors
+
+To all the amazing developers, designers, and testers who have spent their time improving MedSync AI—this section is dedicated to you. Thank you for your code, your bug reports, and your enthusiasm!
+
+<a href="https://github.com/tirth-patel06/MedSync-AI/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=tirth-patel06/MedSync-AI" alt="Contributors" />
+</a>
+
+(Want to see your face here? Check out our [CONTRIBUTING.md](CONTRIBUTING.md) guidelines and grab an open issue!)
+
+---
+
 ## 📜 License
 
 Open-source. See `LICENSE` for details.
@@ -561,12 +583,3 @@ Open-source. See `LICENSE` for details.
 - Open an issue or discussion with questions or proposals.
 - PRs welcome—please keep them focused and well-described.
 - For security issues, privately disclose first; do not file public issues containing secrets.
-
----
-
-## ✅ Submission notes for Social Winter of Code
-
-- Clearly open to newcomers with mentored guidance.
-- Labeled issues for ease of picking tasks.
-- Realistic, full-stack project touching frontend, backend, and AI/LLM integrations.
-- Active maintainers ready to review PRs and help contributors onboard.
