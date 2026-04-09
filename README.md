@@ -63,6 +63,10 @@ MedSync AI features a robust translation and accessibility engine to support div
 
 ```
 MedSync-AI/
+├─ README.md                 # Main project overview (this file)
+├─ ARCHITECTURE.md           # System architecture details
+├─ CONTRIBUTING.md           # Contribution guidelines
+├─ SECURITY.md               # Security policy and reporting
 ├─ client/                  # React app
 │  ├─ src/pages             # Views (Dashboard, Login, addMedication, agents, etc.)
 │  ├─ src/components        # Reusable components (ProtectedRoute, Navbar, etc.)
@@ -77,6 +81,8 @@ MedSync-AI/
    └─ src/index.js          # App + Socket.IO entry point
 ```
 
+Additional docs available: `client/README.md`, `client/CONTRIBUTING.md`, and `server/CONTRIBUTING.md`.
+
 ---
 
 ## 🏁 Getting started
@@ -88,13 +94,19 @@ MedSync-AI/
 - API keys for Groq/Gemini (and any other LLM providers you use)
 - Google OAuth2 credentials (if using Calendar sync)
 
+### Current status (repo/tooling health)
+- This is a **monorepo** with two independent Node projects: `client/` and `server/` (each has its own `package.json` + lockfile).
+- `client` lint currently reports many pre-existing issues (`npm run lint` currently fails).
+- In network-restricted environments (including this runner), `server` install/test flow is blocked because `server/package-lock.json` resolves some packages from `https://registry.npmmirror.com`, which may be unreachable.
+- `server` currently has only a placeholder `npm test` script (it exits with an error).
+
 ### Quick dev (two terminals)
 - Terminal A: `cd server && npm install && npm run dev` (starts API on 8080)
 - Terminal B: `cd client && npm install && npm run dev` (starts web on 5173)
 
 ### Useful scripts
-- Frontend: `npm run dev`, `npm run build`, `npm run lint`, `npm run preview`
-- Backend: `npm run dev`, `npm start`
+- Frontend (`client/`): `npm run dev`, `npm run build`, `npm run lint`, `npm run preview`
+- Backend (`server/`): `npm run dev`, `npm start`
 
 ### 1) Clone
 ```bash
@@ -509,12 +521,9 @@ Phase 9 implements comprehensive testing coverage for all multilingual features 
 
 - **Run Tests**:
   ```bash
-  # Backend
-  cd server && npm test && npm run test:coverage
-  # Frontend
-  cd client && npm test && npm run test:coverage
-  # E2E
-  cd client && npm run test:e2e
+  # Current scripts available in this repo state:
+  cd server && npm test        # placeholder script (currently exits with error)
+  cd client && npm run lint    # lint currently reports pre-existing issues
   ```
 
 ---
