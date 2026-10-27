@@ -353,3 +353,34 @@ UI Re-render
 **Last Updated:** 2024
 
 For questions or clarifications about the architecture, please open a GitHub Discussion or Issue.
+
+## 📦 Deployment Architecture
+
+- **Docker Containerization**: The entire application can be containerized using the provided `Dockerfile` in the root directory. The frontend (Vite) and backend (Express) run in separate containers, orchestrated via `docker-compose.yml`. This ensures consistent environments across development, testing, and production.
+- **Environment Configuration**: All secrets (e.g., JWT secret, MongoDB URI, Google OAuth credentials, Groovy/Gemini API keys) are loaded from environment variables. Reference the `.env.example` file for required variables and never commit real values.
+- **CI/CD Pipeline**: Recommended workflow includes GitHub Actions that:
+  1. Run linting and type checking on both client and server.
+  2. Execute unit/integration tests.
+  3. Build Docker images.
+  4. Deploy to a Kubernetes cluster or a managed container service (e.g., Render, Fly.io).
+- **Production Considerations**:
+  - Enable HTTPS termination (e.g., via a reverse proxy like Nginx or Traefik).
+  - Scale the Node.js backend horizontally with a load balancer.
+  - Use managed MongoDB services (e.g., Atlas) with proper backup and security.
+
+## ❓ FAQ
+
+1. **How do I add a new AI agent?**
+   - Create a new LangChain handler in `server/src/utils/` and expose an endpoint in `agentsRoutes.js`. Register the route in the API controller and add corresponding frontend UI components.
+2. **Can I switch LLM providers?**
+   - Yes, update the provider configuration in `server/src/utils/*_model.js` files. Ensure the required SDKs are installed.
+3. **Where are the real‑time events handled?**
+   - Socket.IO server initialization lives in `server/src/index.js`. Client listeners are defined in `client/src/context/socketContext.jsx`.
+
+## 🤝 Contributing
+
+- Follow the guidelines in `CONTRIBUTING.md`.
+- Ensure all new code is covered by unit tests.
+- Update this `ARCHITECTURE.md` whenever you add or modify major components or flows.
+
+---
